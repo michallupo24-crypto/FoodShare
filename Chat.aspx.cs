@@ -54,16 +54,15 @@ public partial class Chat : System.Web.UI.Page
 
             try
             {
-                List<Dictionary<string, object>> existingReview = SupabaseRest.Select(
-                    "reviews",
-                    "select=id&reviewer_id=eq." + myId + "&reviewee_id=eq." + OtherUserId + "&item_id=eq." + ItemId,
+                AlreadyReviewed = SupabaseRest.RpcBool(
+                    "has_reviewed",
+                    new Dictionary<string, object> { { "target_reviewee", OtherUserId }, { "target_item", Convert.ToInt64(ItemId) } },
                     token);
-                AlreadyReviewed = existingReview.Count > 0;
                 CanReview = true;
             }
             catch (Exception)
             {
-                // טבלת reviews עדיין לא קיימת (לפני הרצת 004_reviews.sql) - לא מפילים את כל הצ'אט בשביל זה
+                // טבלת reviews / הפונקציה has_reviewed עדיין לא קיימות - לא מפילים את כל הצ'אט בשביל זה
                 CanReview = false;
             }
         }

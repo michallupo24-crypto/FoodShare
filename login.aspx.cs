@@ -30,7 +30,7 @@ public partial class login : System.Web.UI.Page
 
         List<Dictionary<string, object>> profiles = SupabaseRest.Select(
             "profiles",
-            "id=eq." + result.UserId + "&select=*",
+            "id=eq." + result.UserId + "&select=id,username,is_admin,city,login_count,is_blocked",
             result.AccessToken);
 
         if (profiles.Count == 0)
@@ -61,7 +61,7 @@ public partial class login : System.Web.UI.Page
         Session["loginCount"] = newCount;
         Session["userCity"] = profile["city"] != null ? profile["city"].ToString() : "";
 
-        Session["message"] = "ההתחברות בהצלחה! זו כניסה מספר " + newCount + ".<br/><br/><a href='HomePage.aspx'>לדף הבית</a>";
+        Session["message"] = "ההתחברות בהצלחה! זו כניסה מספר " + newCount + ".<br/><br/><a href='FoodBoard.aspx'>ללוח המזון</a>";
         Response.Redirect("Message.aspx");
     }
 }

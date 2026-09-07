@@ -124,13 +124,13 @@ public partial class FoodBoard : System.Web.UI.Page
     private string DefaultQuery()
     {
         string today = DateTime.Today.ToString("yyyy-MM-dd");
-        return "select=*,profiles(username)&expiry_date=gte." + today + "&order=expiry_date.asc";
+        return "select=id,user_id,item_name,category,pickup_city,pickup_location,expiry_date,quantity,photo_url,photo_disabled,profiles(username)&expiry_date=gte." + today + "&order=expiry_date.asc";
     }
 
     private string BuildSearchQuery()
     {
         string today = DateTime.Today.ToString("yyyy-MM-dd");
-        string query = "select=*,profiles(username)&expiry_date=gte." + today;
+        string query = "select=id,user_id,item_name,category,pickup_city,pickup_location,expiry_date,quantity,photo_url,photo_disabled,profiles(username)&expiry_date=gte." + today;
 
         if (ddlCity.SelectedValue != "")
             query += "&pickup_city=eq." + Uri.EscapeDataString(ddlCity.SelectedValue);
@@ -153,6 +153,8 @@ public partial class FoodBoard : System.Web.UI.Page
     {
         List<Dictionary<string, object>> rows = SupabaseRest.Select("food_items", query, UserAuth.AccessToken(Session));
         string viewerCity = UserAuth.IsLoggedIn(Session) ? UserAuth.UserCity(Session) : null;
+        string token = UserAuth.AccessToken(Session);
+        bool loggedIn = UserAuth.IsLoggedIn(Session);
 
         currentItems = new List<FoodItemView>();
 
@@ -169,8 +171,34 @@ public partial class FoodBoard : System.Web.UI.Page
                 userName = profile["username"].ToString();
 
             string pickupCity = row["pickup_city"].ToString();
-            double? distance = GeoHelper.DistanceKm(viewerCity, pickupCity);
-            string distanceText = distance.HasValue ? Math.Round(distance.Value) + " ק\"מ" : "מרחק לא ידוע";
+            string distanceText = "מרחק לא ידוע";
+
+            // מרחק מדויק (GPS) אם גם אני וגם המפרסם/ת שיתפנו מיקום - אחרת חוזרים לקירוב לפי עיר
+            double? realDistance = null;
+            if (loggedIn)
+            {
+                try
+                {
+                    realDistance = SupabaseRest.RpcNullableDouble(
+                        "item_distance_km",
+                        new Dictionary<string, object> { { "target_item", Convert.ToInt64(row["id"]) } },
+                        token);
+                }
+                catch (Exception)
+                {
+                    // הפונקציה עדיין לא קיימת (לפני הרצת 008_precise_location.sql) - נופלים לקירוב
+                }
+            }
+
+            if (realDistance.HasValue)
+            {
+                distanceText = Math.Round(realDistance.Value, 1) + " ק\"מ (מדויק)";
+            }
+            else
+            {
+                double? cityDistance = GeoHelper.DistanceKm(viewerCity, pickupCity);
+                distanceText = cityDistance.HasValue ? Math.Round(cityDistance.Value) + " ק\"מ" : "מרחק לא ידוע";
+            }
 
             bool photoDisabled = row.ContainsKey("photo_disabled") && Convert.ToBoolean(row["photo_disabled"]);
             string photoUrl = (!photoDisabled && row.ContainsKey("photo_url") && row["photo_url"] != null)

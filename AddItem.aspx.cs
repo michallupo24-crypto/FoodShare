@@ -67,6 +67,14 @@ public partial class AddItem : System.Web.UI.Page
             { "pickup_location", txtLocation.Text.Trim() }
         };
 
+        double lat, lon;
+        if (double.TryParse(hdnLat.Value, System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out lat) &&
+            double.TryParse(hdnLon.Value, System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out lon))
+        {
+            item["lat"] = lat;
+            item["lon"] = lon;
+        }
+
         if (CanUploadPhoto && fuPhoto.HasFile)
         {
             try

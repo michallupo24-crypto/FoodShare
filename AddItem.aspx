@@ -26,7 +26,13 @@
         </asp:DropDownList><br />
 
         <label>כתובת / מיקום מדויק:</label><br />
-        <asp:TextBox ID="txtLocation" runat="server" placeholder="רחוב, שכונה..." required="true"></asp:TextBox><br /><br />
+        <asp:TextBox ID="txtLocation" runat="server" placeholder="רחוב, שכונה..." required="true"></asp:TextBox><br />
+
+        <asp:HiddenField ID="hdnLat" runat="server" />
+        <asp:HiddenField ID="hdnLon" runat="server" />
+        <button type="button" onclick="shareItemLocation()">שיתוף מיקום המוצר למרחק מדויק (לא חובה)</button>
+        <span id="itemLocationStatus" class="chat-item-context"></span>
+        <br /><br />
 
         <div class='<%= "photo-gate" + (CanUploadPhoto ? " unlocked" : "") %>'>
             <div class="photo-gate-title"><%= CanUploadPhoto ? "תמונות נפתחו" : "תמונות ייפתחו אחרי 2 ביקורות" %></div>
@@ -50,4 +56,22 @@
 
         <asp:Button ID="btnAdd" runat="server" Text="פרסם מוצר" OnClick="btnAdd_Click" />
     </div>
+
+    <script type="text/javascript">
+        function shareItemLocation() {
+            var status = document.getElementById("itemLocationStatus");
+            if (!navigator.geolocation) {
+                status.textContent = "הדפדפן לא תומך בשיתוף מיקום.";
+                return;
+            }
+            status.textContent = "מבקש הרשאה...";
+            navigator.geolocation.getCurrentPosition(function (pos) {
+                document.getElementById('<%= hdnLat.ClientID %>').value = pos.coords.latitude;
+                document.getElementById('<%= hdnLon.ClientID %>').value = pos.coords.longitude;
+                status.textContent = "המיקום שותף בהצלחה. מי שיחפש יראה מרחק מדויק.";
+            }, function () {
+                status.textContent = "שיתוף המיקום נכשל או נדחה - אפשר לפרסם גם בלעדיו.";
+            });
+        }
+    </script>
 </asp:Content>

@@ -46,10 +46,32 @@
             <option value="Beersheba">באר שבע</option>
         </select><br /><br />
 
+        <input type="hidden" id="Lat" name="Lat" />
+        <input type="hidden" id="Lon" name="Lon" />
+        <button type="button" onclick="shareLocation()">שיתוף מיקום לחישוב מרחק מדויק (לא חובה)</button>
+        <span id="locationStatus" class="chat-item-context"></span>
+        <br /><br />
+
         <input type="submit" name="mySubmit" value="הירשם" onclick="return checkForm()" />
     </div>
 
     <script type="text/javascript">
+        function shareLocation() {
+            var status = document.getElementById("locationStatus");
+            if (!navigator.geolocation) {
+                status.textContent = "הדפדפן לא תומך בשיתוף מיקום.";
+                return;
+            }
+            status.textContent = "מבקש הרשאה...";
+            navigator.geolocation.getCurrentPosition(function (pos) {
+                document.getElementById("Lat").value = pos.coords.latitude;
+                document.getElementById("Lon").value = pos.coords.longitude;
+                status.textContent = "המיקום שותף בהצלחה. תוכלו לראות מרחק מדויק למוצרים.";
+            }, function () {
+                status.textContent = "שיתוף המיקום נכשל או נדחה - אפשר להירשם גם בלעדיו.";
+            });
+        }
+
         function checkForm() {
             var name = document.getElementById("FirstName").value;
             var year = document.getElementById("BirthYear").value;

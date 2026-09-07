@@ -5,6 +5,6 @@
         <h2>הודעה</h2>
         <asp:Literal ID="litMessage" runat="server"></asp:Literal>
         <br /><br />
-        <a href="HomePage.aspx">חזרה לדף הבית</a>
+        <a href="FoodBoard.aspx">חזרה ללוח המזון</a>
     </div>
 </asp:Content>

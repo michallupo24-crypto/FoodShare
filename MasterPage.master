@@ -19,16 +19,13 @@
                         <h1>FoodShare <span class="header-sub-title">שיתוף מזון</span></h1>
                         <asp:Label ID="lblUserStatus" runat="server" CssClass="user-status"></asp:Label>
                         <nav>
-                            <asp:HyperLink ID="lnkHome" runat="server" NavigateUrl="HomePage.aspx" Text="דף הבית" />
-                            <asp:HyperLink ID="lnkAbout" runat="server" NavigateUrl="AboutWebsite.aspx" Text="אודות" />
-                            <asp:HyperLink ID="lnkMap" runat="server" NavigateUrl="AboutMe.aspx" Text="מפת אתר" />
+                            <asp:HyperLink ID="lnkHome" runat="server" NavigateUrl="FoodBoard.aspx" Text="דף הבית" />
                             <asp:HyperLink ID="lnkRegister" runat="server" NavigateUrl="regestaration.aspx" Text="הרשמה" />
                             <asp:HyperLink ID="lnkLogin" runat="server" NavigateUrl="login.aspx" Text="כניסה" />
                             <asp:HyperLink ID="HyperLink1" runat="server" NavigateUrl="Categories.aspx" Text="גלריית קטגוריות" />
                             <asp:HyperLink ID="lnkBoard" runat="server" NavigateUrl="FoodBoard.aspx" Text="עיון" />
                             <asp:HyperLink ID="lnkFoodMap" runat="server" NavigateUrl="Map.aspx" Text="מפה" />
                             <asp:HyperLink ID="lnkAddItem" runat="server" NavigateUrl="AddItem.aspx" Text="לשתף" Visible="false" />
-                            <asp:HyperLink ID="lnkSurvey" runat="server" NavigateUrl="Survey.aspx" Text="סקר" Visible="false" />
                             <asp:HyperLink ID="lnkMessages" runat="server" NavigateUrl="Messages.aspx" Text="הודעות" Visible="false" />
                             <asp:Label ID="lblUnreadBadge" runat="server" CssClass="nav-badge" Visible="false" />
                             <asp:HyperLink ID="lnkAdmin" runat="server" NavigateUrl="AdminPanel.aspx" Text="מודרציה" Visible="false" />

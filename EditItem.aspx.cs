@@ -24,7 +24,8 @@ public partial class EditItem : System.Web.UI.Page
     private void LoadItem()
     {
         List<Dictionary<string, object>> rows = SupabaseRest.Select(
-            "food_items", "id=eq." + itemId + "&select=*", UserAuth.AccessToken(Session));
+            "food_items", "id=eq." + itemId + "&select=id,user_id,item_name,expiry_date,quantity,category,pickup_city,pickup_location",
+            UserAuth.AccessToken(Session));
 
         if (rows.Count == 0)
         {

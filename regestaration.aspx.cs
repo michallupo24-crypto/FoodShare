@@ -50,6 +50,14 @@ public partial class regestaration : System.Web.UI.Page
                 { "city", city }
             };
 
+            double lat, lon;
+            if (double.TryParse(Request.Form["Lat"], System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out lat) &&
+                double.TryParse(Request.Form["Lon"], System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out lon))
+            {
+                profile["lat"] = lat;
+                profile["lon"] = lon;
+            }
+
             try
             {
                 SupabaseRest.Insert("profiles", profile, result.AccessToken);

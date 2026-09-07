@@ -45,6 +45,6 @@ public static class UserAuth
     public static void RequireAdmin(HttpSessionState session)
     {
         if (!IsAdmin(session))
-            HttpContext.Current.Response.Redirect("HomePage.aspx");
+            HttpContext.Current.Response.Redirect("FoodBoard.aspx");
     }
 }

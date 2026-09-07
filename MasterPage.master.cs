@@ -17,7 +17,6 @@ public partial class MasterPage : System.Web.UI.MasterPage
         lnkLogin.Visible = !loggedIn;
 
         lnkAddItem.Visible = loggedIn;
-        lnkSurvey.Visible = loggedIn;
         lnkLogout.Visible = loggedIn;
         lnkMessages.Visible = loggedIn;
 

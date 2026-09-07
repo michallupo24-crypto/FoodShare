@@ -25,7 +25,8 @@ public partial class EditUser : System.Web.UI.Page
     private void LoadUser()
     {
         List<Dictionary<string, object>> rows = SupabaseRest.Select(
-            "profiles", "id=eq." + userId + "&select=*", UserAuth.AccessToken(Session));
+            "profiles", "id=eq." + userId + "&select=id,first_name,last_name,username,phone_prefix,phone_number,birth_year,gender,city,login_count,is_admin",
+            UserAuth.AccessToken(Session));
 
         if (rows.Count == 0)
         {

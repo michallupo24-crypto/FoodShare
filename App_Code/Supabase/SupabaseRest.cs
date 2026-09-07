@@ -96,6 +96,25 @@ public static class SupabaseRest
         }
     }
 
+    // for RPC functions that return a single nullable double (e.g. "returns double precision")
+    public static double? RpcNullableDouble(string functionName, object args, string userAccessToken)
+    {
+        string url = SupabaseConfig.Url + "/rest/v1/rpc/" + functionName;
+        using (var request = new HttpRequestMessage(HttpMethod.Post, url))
+        {
+            AddAuthHeaders(request, userAccessToken);
+            string json = new JavaScriptSerializer().Serialize(args ?? new Dictionary<string, object>());
+            request.Content = new StringContent(json, Encoding.UTF8, "application/json");
+            HttpResponseMessage response = Http.SendAsync(request).GetAwaiter().GetResult();
+            string body = response.Content.ReadAsStringAsync().GetAwaiter().GetResult();
+            response.EnsureSuccessStatusCode();
+            body = body.Trim();
+            if (string.IsNullOrEmpty(body) || body == "null")
+                return null;
+            return double.Parse(body, System.Globalization.CultureInfo.InvariantCulture);
+        }
+    }
+
     private static void Send(HttpMethod method, string table, string query, object body, string userAccessToken)
     {
         string url = SupabaseConfig.Url + "/rest/v1/" + table;

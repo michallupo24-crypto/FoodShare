@@ -10,6 +10,6 @@ public partial class logout : System.Web.UI.Page
         Session.Remove("UserID");
         Session.Remove("loginCount");
         Session.Clear();
-        Response.Redirect("HomePage.aspx");
+        Response.Redirect("FoodBoard.aspx");
     }
 }

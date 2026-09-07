@@ -11,6 +11,12 @@
             <asp:Literal ID="litHistory" runat="server"></asp:Literal>
         </div>
 
+        <% if (CanShareAddress) { %>
+            <div class="chat-share-address-row">
+                <button type="button" id="chatShareAddressBtn">&#128205; שלח/י כתובת מדויקת</button>
+            </div>
+        <% } %>
+
         <div class="chat-input-row">
             <input type="text" id="chatInput" placeholder="כתבו הודעה..." autocomplete="off" />
             <button type="button" id="chatSendBtn">שליחה</button>
@@ -29,12 +35,14 @@
             var itemId = <%= string.IsNullOrEmpty(ItemId) ? "null" : Sq(ItemId) %>;
             var accessToken = <%= Sq(UserAuth.AccessToken(Session)) %>;
             var refreshToken = <%= Sq(UserAuth.RefreshToken(Session)) %>;
+            var pickupLocation = <%= string.IsNullOrEmpty(ItemPickupLocation) ? "null" : Sq(ItemPickupLocation) %>;
 
             var client = supabase.createClient(supabaseUrl, supabaseAnonKey);
 
             var historyEl = document.getElementById("chatHistory");
             var inputEl = document.getElementById("chatInput");
             var sendBtn = document.getElementById("chatSendBtn");
+            var shareAddressBtn = document.getElementById("chatShareAddressBtn");
             var errorEl = document.getElementById("chatError");
 
             function escapeHtml(text) {
@@ -43,10 +51,14 @@
                 return div.innerHTML;
             }
 
-            function appendBubble(body, mine) {
+            function appendBubble(body, mine, messageType) {
                 var div = document.createElement("div");
-                div.className = "chat-bubble " + (mine ? "mine" : "theirs");
-                div.innerHTML = escapeHtml(body);
+                div.className = "chat-bubble " + (mine ? "mine" : "theirs") + (messageType === "address" ? " address" : "");
+                var html = "";
+                if (messageType === "address")
+                    html += "<strong>&#128205; כתובת לאיסוף:</strong><br/>";
+                html += escapeHtml(body);
+                div.innerHTML = html;
                 historyEl.appendChild(div);
                 historyEl.scrollTop = historyEl.scrollHeight;
             }
@@ -68,7 +80,7 @@
                         function (payload) {
                             var m = payload.new;
                             if (m.sender_id === otherId) {
-                                appendBubble(m.body, false);
+                                appendBubble(m.body, false, m.message_type);
                                 client.rpc("mark_conversation_read", { other_user: otherId });
                             }
                         })
@@ -77,15 +89,18 @@
                 historyEl.scrollTop = historyEl.scrollHeight;
             }
 
+            async function sendRow(body, messageType) {
+                var row = { sender_id: myId, receiver_id: otherId, body: body, message_type: messageType };
+                if (itemId) row.item_id = itemId;
+                return await client.from("messages").insert(row);
+            }
+
             async function sendMessage() {
                 var body = inputEl.value.trim();
                 if (!body) return;
 
                 sendBtn.disabled = true;
-                var row = { sender_id: myId, receiver_id: otherId, body: body };
-                if (itemId) row.item_id = itemId;
-
-                var result = await client.from("messages").insert(row);
+                var result = await sendRow(body, "text");
                 sendBtn.disabled = false;
 
                 if (result.error) {
@@ -94,9 +109,24 @@
                 }
 
                 showError("");
-                appendBubble(body, true);
+                appendBubble(body, true, "text");
                 inputEl.value = "";
                 inputEl.focus();
+            }
+
+            async function shareAddress() {
+                if (!pickupLocation) return;
+                shareAddressBtn.disabled = true;
+                var result = await sendRow(pickupLocation, "address");
+                shareAddressBtn.disabled = false;
+
+                if (result.error) {
+                    showError("שליחת הכתובת נכשלה: " + result.error.message);
+                    return;
+                }
+
+                showError("");
+                appendBubble(pickupLocation, true, "address");
             }
 
             sendBtn.addEventListener("click", sendMessage);
@@ -106,6 +136,9 @@
                     sendMessage();
                 }
             });
+            if (shareAddressBtn) {
+                shareAddressBtn.addEventListener("click", shareAddress);
+            }
 
             init();
         })();

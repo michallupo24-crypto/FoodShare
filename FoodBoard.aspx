@@ -3,6 +3,7 @@
 <asp:Content ID="Content1" ContentPlaceHolderID="ContentPlaceHolder1" Runat="Server">
     <h2>לוח שיתוף המזון</h2>
     <p>סינון לפי עיר איסוף, קטגוריה וזמן עד פג תוקף (אפשר לבחור אחד או יותר):</p>
+    <p class="chat-item-context">מטעמי פרטיות מוצגת כאן רק כתובת חלקית ומרחק משוער. הכתובת המדויקת נמסרת ע"י המפרסם/ת דרך הצ'אט.</p>
 
     <div class="form-container">
         <label>עיר איסוף:</label>
@@ -32,7 +33,8 @@
             <asp:BoundField DataField="ItemName" HeaderText="שם המוצר" />
             <asp:BoundField DataField="Category" HeaderText="קטגוריה" />
             <asp:BoundField DataField="PickupCity" HeaderText="עיר איסוף" />
-            <asp:BoundField DataField="PickupLocation" HeaderText="כתובת/מיקום" />
+            <asp:BoundField DataField="PickupLocation" HeaderText="אזור כללי" />
+            <asp:BoundField DataField="Distance" HeaderText="מרחק ממך" />
             <asp:BoundField DataField="ExpiryDate" HeaderText="תאריך תפוגה" DataFormatString="{0:dd/MM/yyyy}" />
             <asp:BoundField DataField="DaysLeft" HeaderText="ימים לפג תוקף" />
             <asp:BoundField DataField="Quantity" HeaderText="כמות" />

@@ -50,6 +50,7 @@ public partial class login : System.Web.UI.Page
         Session["userName"] = profile["username"].ToString();
         Session["isAdmin"] = Convert.ToBoolean(profile["is_admin"]);
         Session["loginCount"] = newCount;
+        Session["userCity"] = profile["city"] != null ? profile["city"].ToString() : "";
 
         Session["message"] = "ההתחברות בהצלחה! זו כניסה מספר " + newCount + ".<br/><br/><a href='HomePage.aspx'>לדף הבית</a>";
         Response.Redirect("Message.aspx");

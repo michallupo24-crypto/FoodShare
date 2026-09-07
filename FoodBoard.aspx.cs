@@ -111,10 +111,13 @@ public partial class FoodBoard : System.Web.UI.Page
         table.Columns.Add("Category", typeof(string));
         table.Columns.Add("PickupCity", typeof(string));
         table.Columns.Add("PickupLocation", typeof(string));
+        table.Columns.Add("Distance", typeof(string));
         table.Columns.Add("ExpiryDate", typeof(DateTime));
         table.Columns.Add("DaysLeft", typeof(int));
         table.Columns.Add("Quantity", typeof(string));
         table.Columns.Add("UserName", typeof(string));
+
+        string viewerCity = UserAuth.IsLoggedIn(Session) ? UserAuth.UserCity(Session) : null;
 
         foreach (Dictionary<string, object> row in rows)
         {
@@ -128,13 +131,18 @@ public partial class FoodBoard : System.Web.UI.Page
             if (profile != null && profile.ContainsKey("username"))
                 userName = profile["username"].ToString();
 
+            string pickupCity = row["pickup_city"].ToString();
+            double? distance = GeoHelper.DistanceKm(viewerCity, pickupCity);
+            string distanceText = distance.HasValue ? Math.Round(distance.Value) + " ק\"מ" : "-";
+
             table.Rows.Add(
                 row["id"].ToString(),
                 row["user_id"].ToString(),
                 row["item_name"].ToString(),
                 row["category"].ToString(),
-                row["pickup_city"].ToString(),
-                row["pickup_location"].ToString(),
+                pickupCity,
+                GeoHelper.PartialLocation(row["pickup_location"].ToString()),
+                distanceText,
                 expiry,
                 daysLeft,
                 row["quantity"].ToString(),

@@ -10,6 +10,8 @@ public partial class Chat : System.Web.UI.Page
     protected string OtherUsername;
     protected string ItemId;
     protected string ItemName;
+    protected string ItemPickupLocation;
+    protected bool CanShareAddress;
 
     protected void Page_Load(object sender, EventArgs e)
     {
@@ -38,9 +40,14 @@ public partial class Chat : System.Web.UI.Page
         if (!string.IsNullOrEmpty(ItemId))
         {
             List<Dictionary<string, object>> item = SupabaseRest.Select(
-                "food_items", "id=eq." + ItemId + "&select=item_name", token);
+                "food_items", "id=eq." + ItemId + "&select=item_name,pickup_location,user_id", token);
+
             if (item.Count > 0)
+            {
                 ItemName = item[0]["item_name"].ToString();
+                ItemPickupLocation = item[0]["pickup_location"].ToString();
+                CanShareAddress = item[0]["user_id"].ToString() == UserAuth.UserId(Session);
+            }
         }
 
         if (!IsPostBack)
@@ -62,7 +69,13 @@ public partial class Chat : System.Web.UI.Page
         foreach (Dictionary<string, object> m in messages)
         {
             bool mine = m["sender_id"].ToString() == myId;
-            html.Append("<div class=\"chat-bubble " + (mine ? "mine" : "theirs") + "\" data-id=\"" + m["id"] + "\">");
+            object messageType;
+            bool isAddress = m.TryGetValue("message_type", out messageType) && messageType != null && messageType.ToString() == "address";
+            string cls = "chat-bubble " + (mine ? "mine" : "theirs") + (isAddress ? " address" : "");
+
+            html.Append("<div class=\"" + cls + "\" data-id=\"" + m["id"] + "\">");
+            if (isAddress)
+                html.Append("<strong>&#128205; כתובת לאיסוף:</strong><br/>");
             html.Append(Server.HtmlEncode(m["body"].ToString()));
             html.Append("</div>");
         }

@@ -28,6 +28,11 @@ public static class UserAuth
         return session["SupabaseRefreshToken"] as string;
     }
 
+    public static string UserCity(HttpSessionState session)
+    {
+        return session["userCity"] as string;
+    }
+
     public static void RequireLogin(HttpSessionState session, string returnUrl)
     {
         if (!IsLoggedIn(session))

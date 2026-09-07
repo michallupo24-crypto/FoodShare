@@ -116,6 +116,7 @@ public partial class FoodBoard : System.Web.UI.Page
         table.Columns.Add("DaysLeft", typeof(int));
         table.Columns.Add("Quantity", typeof(string));
         table.Columns.Add("UserName", typeof(string));
+        table.Columns.Add("PhotoUrl", typeof(string));
 
         string viewerCity = UserAuth.IsLoggedIn(Session) ? UserAuth.UserCity(Session) : null;
 
@@ -135,6 +136,10 @@ public partial class FoodBoard : System.Web.UI.Page
             double? distance = GeoHelper.DistanceKm(viewerCity, pickupCity);
             string distanceText = distance.HasValue ? Math.Round(distance.Value) + " ק\"מ" : "-";
 
+            bool photoDisabled = row.ContainsKey("photo_disabled") && Convert.ToBoolean(row["photo_disabled"]);
+            string photoUrl = (!photoDisabled && row.ContainsKey("photo_url") && row["photo_url"] != null)
+                ? row["photo_url"].ToString() : "";
+
             table.Rows.Add(
                 row["id"].ToString(),
                 row["user_id"].ToString(),
@@ -146,7 +151,8 @@ public partial class FoodBoard : System.Web.UI.Page
                 expiry,
                 daysLeft,
                 row["quantity"].ToString(),
-                userName);
+                userName,
+                photoUrl);
         }
 
         gvItems.DataSource = table;
@@ -169,11 +175,17 @@ public partial class FoodBoard : System.Web.UI.Page
         return UserAuth.UserId(Session) != itemUserId.ToString();
     }
 
+    public bool CanReportPhoto(object itemUserId, object photoUrl)
+    {
+        if (!UserAuth.IsLoggedIn(Session))
+            return false;
+        if (photoUrl == null || photoUrl.ToString() == "")
+            return false;
+        return UserAuth.UserId(Session) != itemUserId.ToString();
+    }
+
     protected void gvItems_RowCommand(object sender, GridViewCommandEventArgs e)
     {
-        if (e.CommandName != "DeleteItem")
-            return;
-
         if (!UserAuth.IsLoggedIn(Session))
         {
             Response.Redirect("login.aspx?returnUrl=FoodBoard.aspx");
@@ -181,8 +193,33 @@ public partial class FoodBoard : System.Web.UI.Page
         }
 
         string itemId = e.CommandArgument.ToString();
-        SupabaseRest.Delete("food_items", "id=eq." + itemId, UserAuth.AccessToken(Session));
-        lblMessage.Text = "המוצר נמחק.";
-        LoadItems(BuildSearchQuery());
+
+        if (e.CommandName == "DeleteItem")
+        {
+            SupabaseRest.Delete("food_items", "id=eq." + itemId, UserAuth.AccessToken(Session));
+            lblMessage.Text = "המוצר נמחק.";
+            LoadItems(BuildSearchQuery());
+        }
+        else if (e.CommandName == "ReportPhoto")
+        {
+            var report = new Dictionary<string, object>
+            {
+                { "item_id", Convert.ToInt64(itemId) },
+                { "reporter_id", UserAuth.UserId(Session) },
+                { "reason", "דיווח מלוח המודעות" }
+            };
+
+            try
+            {
+                SupabaseRest.Insert("photo_reports", report, UserAuth.AccessToken(Session));
+                lblMessage.Text = "התמונה דווחה והוסתרה לבדיקה.";
+            }
+            catch (Exception)
+            {
+                lblMessage.Text = "לא ניתן לדווח על התמונה הזו (אולי כבר דיווחתם עליה).";
+            }
+
+            LoadItems(BuildSearchQuery());
+        }
     }
 }

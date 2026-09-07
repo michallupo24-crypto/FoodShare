@@ -41,6 +41,15 @@ public partial class login : System.Web.UI.Page
         }
 
         Dictionary<string, object> profile = profiles[0];
+
+        object isBlockedObj;
+        if (profile.TryGetValue("is_blocked", out isBlockedObj) && isBlockedObj != null && Convert.ToBoolean(isBlockedObj))
+        {
+            Session["message"] = "החשבון הזה נחסם. פנו למנהל/ת האתר אם אתם חושבים שזו טעות.";
+            Response.Redirect("Message.aspx");
+            return;
+        }
+
         int newCount = Convert.ToInt32(profile["login_count"]) + 1;
         SupabaseRest.Rpc("increment_login_count", null, result.AccessToken);
 

@@ -112,10 +112,21 @@ ul {
     margin-top: 15px;
 }
 
+.item-photo-thumb {
+    width: 60px;
+    height: 60px;
+    object-fit: cover;
+    border-radius: 6px;
+}
+
 .grid-table th, .grid-table td {
     border: 1px solid #ccc;
     padding: 8px;
     text-align: right;
+}
+
+.grid-table .flagged-row {
+    background-color: #fdecea;
 }
 
 .grid-table th {

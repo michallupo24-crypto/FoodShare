@@ -30,6 +30,11 @@
     <asp:GridView ID="gvItems" runat="server" AutoGenerateColumns="False" CssClass="grid-table"
         DataKeyNames="ItemID" OnRowCommand="gvItems_RowCommand" EmptyDataText="לא נמצאו מוצרים.">
         <Columns>
+            <asp:TemplateField HeaderText="תמונה">
+                <ItemTemplate>
+                    <asp:Image ID="imgPhoto" runat="server" ImageUrl='<%# Eval("PhotoUrl") %>' CssClass="item-photo-thumb" Visible='<%# Eval("PhotoUrl").ToString() != "" %>' />
+                </ItemTemplate>
+            </asp:TemplateField>
             <asp:BoundField DataField="ItemName" HeaderText="שם המוצר" />
             <asp:BoundField DataField="Category" HeaderText="קטגוריה" />
             <asp:BoundField DataField="PickupCity" HeaderText="עיר איסוף" />
@@ -54,6 +59,10 @@
                         CommandArgument='<%# Eval("ItemID") %>'
                         Visible='<%# CanEdit(Eval("UserID")) %>'
                         OnClientClick="return confirm('למחוק את המוצר?');" />
+                    <asp:Button ID="btnReportPhoto" runat="server" Text="דווח על תמונה" CommandName="ReportPhoto"
+                        CommandArgument='<%# Eval("ItemID") %>'
+                        Visible='<%# CanReportPhoto(Eval("UserID"), Eval("PhotoUrl")) %>'
+                        OnClientClick="return confirm('לדווח על התמונה כלא הולמת/מזויפת?');" />
                 </ItemTemplate>
             </asp:TemplateField>
         </Columns>

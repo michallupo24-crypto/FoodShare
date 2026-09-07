@@ -7,9 +7,23 @@ using System.Xml;
 
 public partial class AddItem : System.Web.UI.Page
 {
+    protected bool CanUploadPhoto;
+    protected int ReviewCount;
+
     protected void Page_Load(object sender, EventArgs e)
     {
         UserAuth.RequireLogin(Session, "AddItem.aspx");
+        Form.Enctype = "multipart/form-data";
+
+        try
+        {
+            ReviewCount = ReviewHelper.GetReviewCount(UserAuth.UserId(Session), UserAuth.AccessToken(Session));
+            CanUploadPhoto = ReviewCount >= ReviewHelper.MinReviewsForPhoto;
+        }
+        catch (Exception)
+        {
+            CanUploadPhoto = false;
+        }
 
         if (!IsPostBack)
             LoadCategoriesFromXml();
@@ -39,9 +53,12 @@ public partial class AddItem : System.Web.UI.Page
             return;
         }
 
+        string token = UserAuth.AccessToken(Session);
+        string userId = UserAuth.UserId(Session);
+
         var item = new Dictionary<string, object>
         {
-            { "user_id", UserAuth.UserId(Session) },
+            { "user_id", userId },
             { "item_name", txtItemName.Text.Trim() },
             { "expiry_date", DateTime.Parse(txtExpiry.Text).ToString("yyyy-MM-dd") },
             { "quantity", Convert.ToInt32(txtQuantity.Text) },
@@ -50,7 +67,32 @@ public partial class AddItem : System.Web.UI.Page
             { "pickup_location", txtLocation.Text.Trim() }
         };
 
-        SupabaseRest.Insert("food_items", item, UserAuth.AccessToken(Session));
+        if (CanUploadPhoto && fuPhoto.HasFile)
+        {
+            try
+            {
+                string path = userId + "/" + Guid.NewGuid() + "-" + Path.GetFileName(fuPhoto.FileName);
+                string photoUrl = SupabaseStorage.Upload("item-photos", path, fuPhoto.FileBytes, fuPhoto.PostedFile.ContentType, token);
+                item["photo_url"] = photoUrl;
+            }
+            catch (Exception)
+            {
+                lblMessage.ForeColor = System.Drawing.Color.Red;
+                lblMessage.Text = "המוצר לא פורסם - העלאת התמונה נכשלה. נסו שוב בלי תמונה או עם קובץ אחר.";
+                return;
+            }
+        }
+
+        try
+        {
+            SupabaseRest.Insert("food_items", item, token);
+        }
+        catch (Exception)
+        {
+            lblMessage.ForeColor = System.Drawing.Color.Red;
+            lblMessage.Text = "פרסום המוצר נכשל.";
+            return;
+        }
 
         lblMessage.ForeColor = System.Drawing.Color.Green;
         lblMessage.Text = "המוצר פורסם בהצלחה!";

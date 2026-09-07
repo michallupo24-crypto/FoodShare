@@ -28,6 +28,13 @@
         <label>כתובת / מיקום מדויק:</label><br />
         <asp:TextBox ID="txtLocation" runat="server" placeholder="רחוב, שכונה..." required="true"></asp:TextBox><br /><br />
 
+        <% if (CanUploadPhoto) { %>
+            <label>תמונה של המוצר (לא חובה):</label><br />
+            <asp:FileUpload ID="fuPhoto" runat="server" /><br /><br />
+        <% } else { %>
+            <p class="chat-item-context">ניתן להוסיף תמונה למוצרים רק אחרי שקיבלתם לפחות 2 ביקורות (כרגע: <%= ReviewCount %>).</p>
+        <% } %>
+
         <asp:Button ID="btnAdd" runat="server" Text="פרסם מוצר" OnClick="btnAdd_Click" />
     </div>
 </asp:Content>

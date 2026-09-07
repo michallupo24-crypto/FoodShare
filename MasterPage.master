@@ -5,7 +5,7 @@
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     <meta charset="utf-8" />
     <title>שיתוף מזון - FoodShare</title>
-   <link href="StyleSheet.css" rel="stylesheet" type="text/css" />
+   <link id="cssLink" runat="server" href="StyleSheet.css" rel="stylesheet" type="text/css" />
     <asp:ContentPlaceHolder id="head" runat="server"></asp:ContentPlaceHolder>
 </head>
 <body>
@@ -29,6 +29,8 @@
  <asp:HyperLink ID="HyperLink1" runat="server" NavigateUrl="Categories.aspx" Text="גלריית קטגוריות" />
                         <asp:Literal ID="litS5" runat="server" Text=" | " />
                         <asp:HyperLink ID="lnkBoard" runat="server" NavigateUrl="FoodBoard.aspx" Text="לוח מודעות" />
+                        <asp:Literal ID="litS11" runat="server" Text=" | " />
+                        <asp:HyperLink ID="lnkFoodMap" runat="server" NavigateUrl="Map.aspx" Text="מפה" />
                         <asp:Literal ID="litS6" runat="server" Text=" | " />
                         <asp:HyperLink ID="lnkAddItem" runat="server" NavigateUrl="AddItem.aspx" Text="הוספת מוצר" Visible="false" />
                         <asp:Literal ID="litS7" runat="server" Text=" | " Visible="false" />

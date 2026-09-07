@@ -13,6 +13,38 @@ public static class GeoHelper
         { "Beersheba", new double[] { 31.2530, 34.7915 } }
     };
 
+    private static readonly Dictionary<string, string> CityHebrewNames = new Dictionary<string, string>
+    {
+        { "Tel Aviv", "תל אביב" },
+        { "Jerusalem", "ירושלים" },
+        { "Haifa", "חיפה" },
+        { "Beersheba", "באר שבע" }
+    };
+
+    public class CityInfo
+    {
+        public string EnglishName;
+        public string HebrewName;
+        public double Lat;
+        public double Lon;
+    }
+
+    public static List<CityInfo> GetAllCities()
+    {
+        var result = new List<CityInfo>();
+        foreach (KeyValuePair<string, double[]> kvp in CityCoords)
+        {
+            result.Add(new CityInfo
+            {
+                EnglishName = kvp.Key,
+                HebrewName = CityHebrewNames[kvp.Key],
+                Lat = kvp.Value[0],
+                Lon = kvp.Value[1]
+            });
+        }
+        return result;
+    }
+
     // מרחק משוער בק"מ בין שתי ערים (קו ישר ממרכז לעיר) - null אם אחת הערים לא מוכרת
     public static double? DistanceKm(string cityA, string cityB)
     {

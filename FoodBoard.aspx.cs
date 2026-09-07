@@ -17,15 +17,21 @@ public partial class FoodBoard : System.Web.UI.Page
             LoadCategoryFilter();
 
             string catFromUrl = Request.QueryString["cat"];
-            if (!string.IsNullOrEmpty(catFromUrl))
+            string cityFromUrl = Request.QueryString["city"];
+            bool hasUrlFilter = false;
+
+            if (!string.IsNullOrEmpty(catFromUrl) && ddlCategory.Items.FindByValue(catFromUrl) != null)
             {
                 ddlCategory.SelectedValue = catFromUrl;
-                LoadItems(BuildSearchQuery());
+                hasUrlFilter = true;
             }
-            else
+            if (!string.IsNullOrEmpty(cityFromUrl) && ddlCity.Items.FindByValue(cityFromUrl) != null)
             {
-                LoadItems(DefaultQuery());
+                ddlCity.SelectedValue = cityFromUrl;
+                hasUrlFilter = true;
             }
+
+            LoadItems(hasUrlFilter ? BuildSearchQuery() : DefaultQuery());
         }
     }
 

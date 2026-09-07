@@ -8,6 +8,8 @@ public partial class MasterPage : System.Web.UI.MasterPage
         Response.Charset = "utf-8";
         Response.ContentEncoding = System.Text.Encoding.UTF8;
 
+        cssLink.Href = "StyleSheet.css?v=" + System.IO.File.GetLastWriteTime(Server.MapPath("~/StyleSheet.css")).Ticks;
+
         bool loggedIn = UserAuth.IsLoggedIn(Session);
         bool isAdmin = UserAuth.IsAdmin(Session);
 

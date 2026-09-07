@@ -5,6 +5,9 @@
         <div>
             <h2>זמין עכשיו</h2>
             <p class="chat-item-context">מטעמי פרטיות מוצגת כאן רק כתובת חלקית ומרחק משוער. הכתובת המדויקת נמסרת ע"י המפרסם/ת דרך הצ'אט.</p>
+            <asp:PlaceHolder ID="phLocationPrivacyNote" runat="server" Visible="false">
+                <p class="chat-item-context">המרחקים המסומנים "מדויק" מחושבים לפי המיקום (GPS) ששיתפת בהרשמה - הוא לא מוצג לאף אחד, רק משמש לחישוב מרחק.</p>
+            </asp:PlaceHolder>
         </div>
     </div>
 

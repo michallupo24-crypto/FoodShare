@@ -193,6 +193,7 @@ public partial class FoodBoard : System.Web.UI.Page
             if (realDistance.HasValue)
             {
                 distanceText = Math.Round(realDistance.Value, 1) + " ק\"מ (מדויק)";
+                phLocationPrivacyNote.Visible = true;
             }
             else
             {

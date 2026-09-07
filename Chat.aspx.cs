@@ -11,7 +11,11 @@ public partial class Chat : System.Web.UI.Page
     protected string ItemId;
     protected string ItemName;
     protected string ItemPickupLocation;
+    protected string ItemExpiryDate;
+    protected double? ItemLat;
+    protected double? ItemLon;
     protected bool CanShareAddress;
+    protected bool CanCoordinatePickup;
     protected bool CanReview;
     protected bool AlreadyReviewed;
 
@@ -43,13 +47,40 @@ public partial class Chat : System.Web.UI.Page
         if (!string.IsNullOrEmpty(ItemId))
         {
             List<Dictionary<string, object>> item = SupabaseRest.Select(
-                "food_items", "id=eq." + ItemId + "&select=item_name,pickup_location,user_id", token);
+                "food_items", "id=eq." + ItemId + "&select=item_name,pickup_location,expiry_date,user_id", token);
 
             if (item.Count > 0)
             {
                 ItemName = item[0]["item_name"].ToString();
                 ItemPickupLocation = item[0]["pickup_location"].ToString();
+                ItemExpiryDate = Convert.ToDateTime(item[0]["expiry_date"]).ToString("yyyy-MM-dd");
                 CanShareAddress = item[0]["user_id"].ToString() == myId;
+                CanCoordinatePickup = true;
+
+                if (CanShareAddress)
+                {
+                    try
+                    {
+                        List<Dictionary<string, object>> loc = SupabaseRest.RpcSelect(
+                            "owner_item_location",
+                            new Dictionary<string, object> { { "target_item", Convert.ToInt64(ItemId) } },
+                            token);
+                        if (loc.Count > 0)
+                        {
+                            object latObj, lonObj;
+                            if (loc[0].TryGetValue("lat", out latObj) && latObj != null)
+                                ItemLat = Convert.ToDouble(latObj, System.Globalization.CultureInfo.InvariantCulture);
+                            if (loc[0].TryGetValue("lon", out lonObj) && lonObj != null)
+                                ItemLon = Convert.ToDouble(lonObj, System.Globalization.CultureInfo.InvariantCulture);
+                        }
+                    }
+                    catch (Exception)
+                    {
+                        // owner_item_location עדיין לא קיימת (לפני הרצת 009_pickup_coordination.sql) - נמשיך בלי מיקום GPS
+                    }
+
+                    CanShareAddress = !string.IsNullOrEmpty(ItemPickupLocation) || (ItemLat.HasValue && ItemLon.HasValue);
+                }
             }
 
             try
@@ -117,10 +148,20 @@ public partial class Chat : System.Web.UI.Page
             bool isAddress = m.TryGetValue("message_type", out messageType) && messageType != null && messageType.ToString() == "address";
             string cls = "chat-bubble " + (mine ? "mine" : "theirs") + (isAddress ? " address" : "");
 
+            string body = m["body"].ToString();
             html.Append("<div class=\"" + cls + "\" data-id=\"" + m["id"] + "\">");
             if (isAddress)
+            {
                 html.Append("<strong>&#128205; כתובת לאיסוף:</strong><br/>");
-            html.Append(Server.HtmlEncode(m["body"].ToString()));
+                if (body.StartsWith("http://") || body.StartsWith("https://"))
+                    html.Append("<a href=\"" + Server.HtmlEncode(body) + "\" target=\"_blank\" rel=\"noopener\">פתיחת המיקום במפה</a>");
+                else
+                    html.Append(Server.HtmlEncode(body));
+            }
+            else
+            {
+                html.Append(Server.HtmlEncode(body));
+            }
             html.Append("</div>");
         }
         litHistory.Text = html.ToString();

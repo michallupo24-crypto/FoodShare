@@ -28,12 +28,25 @@
         <label>כתובת / מיקום מדויק:</label><br />
         <asp:TextBox ID="txtLocation" runat="server" placeholder="רחוב, שכונה..." required="true"></asp:TextBox><br /><br />
 
-        <% if (CanUploadPhoto) { %>
-            <label>תמונה של המוצר (לא חובה):</label><br />
-            <asp:FileUpload ID="fuPhoto" runat="server" /><br /><br />
-        <% } else { %>
-            <p class="chat-item-context">ניתן להוסיף תמונה למוצרים רק אחרי שקיבלתם לפחות 2 ביקורות (כרגע: <%= ReviewCount %>).</p>
-        <% } %>
+        <div class='<%= "photo-gate" + (CanUploadPhoto ? " unlocked" : "") %>'>
+            <div class="photo-gate-title"><%= CanUploadPhoto ? "תמונות נפתחו" : "תמונות ייפתחו אחרי 2 ביקורות" %></div>
+            <div class="photo-gate-body">
+                <% if (CanUploadPhoto) { %>
+                    אפשר לצרף תמונה אחת למוצר. תמונה שדווחה מוסתרת עד שמנהל/ת בודק/ת אותה.
+                <% } else { %>
+                    אחרי שתי מסירות עם ביקורת נפתחת האפשרות לצרף תמונה למוצר.
+                <% } %>
+            </div>
+            <div class="photo-gate-pips">
+                <div class='<%= "pip" + (ReviewCount >= 1 ? " filled" : "") %>'></div>
+                <div class='<%= "pip" + (ReviewCount >= 2 ? " filled" : "") %>'></div>
+                <span><%= Math.Min(ReviewCount, 2) %> מתוך 2 ביקורות</span>
+            </div>
+            <% if (CanUploadPhoto) { %>
+                <br />
+                <asp:FileUpload ID="fuPhoto" runat="server" />
+            <% } %>
+        </div>
 
         <asp:Button ID="btnAdd" runat="server" Text="פרסם מוצר" OnClick="btnAdd_Click" />
     </div>

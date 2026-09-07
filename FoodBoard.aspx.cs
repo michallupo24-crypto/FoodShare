@@ -1,14 +1,58 @@
 using System;
 using System.Collections.Generic;
-using System.Data;
 using System.IO;
 using System.Text;
 using System.Web.UI;
 using System.Web.UI.WebControls;
 using System.Xml;
 
+public class FoodItemView
+{
+    public string ItemId { get; set; }
+    public string UserId { get; set; }
+    public string ItemName { get; set; }
+    public string Category { get; set; }
+    public string PickupCity { get; set; }
+    public string PickupLocation { get; set; }
+    public string Distance { get; set; }
+    public DateTime ExpiryDate { get; set; }
+    public int DaysLeft { get; set; }
+    public string Quantity { get; set; }
+    public string UserName { get; set; }
+    public string PhotoUrl { get; set; }
+
+    public string Initials
+    {
+        get { return string.IsNullOrEmpty(UserName) ? "" : UserName.Substring(0, Math.Min(2, UserName.Length)); }
+    }
+
+    public string MetaLine
+    {
+        get { return Quantity + " · " + PickupCity + " · " + PickupLocation + " · " + Distance; }
+    }
+
+    public bool IsUrgent
+    {
+        get { return DaysLeft <= 1; }
+    }
+
+    public string ExpiryLabel
+    {
+        get
+        {
+            if (DaysLeft <= 0) return "היום";
+            if (DaysLeft == 1) return "מחר";
+            return "נותרו " + DaysLeft + " ימים";
+        }
+    }
+
+    public bool HasPhoto { get { return !string.IsNullOrEmpty(PhotoUrl); } }
+}
+
 public partial class FoodBoard : System.Web.UI.Page
 {
+    private List<FoodItemView> currentItems;
+
     protected void Page_Load(object sender, EventArgs e)
     {
         if (!IsPostBack)
@@ -105,26 +149,12 @@ public partial class FoodBoard : System.Web.UI.Page
         return query;
     }
 
-    // ה-GridView הקיים נשאר בלי שינוי - בונים DataTable מקומית באותם שמות עמודות שהיו מול ה-Access
     private void LoadItems(string query)
     {
         List<Dictionary<string, object>> rows = SupabaseRest.Select("food_items", query, UserAuth.AccessToken(Session));
-
-        DataTable table = new DataTable();
-        table.Columns.Add("ItemID", typeof(string));
-        table.Columns.Add("UserID", typeof(string));
-        table.Columns.Add("ItemName", typeof(string));
-        table.Columns.Add("Category", typeof(string));
-        table.Columns.Add("PickupCity", typeof(string));
-        table.Columns.Add("PickupLocation", typeof(string));
-        table.Columns.Add("Distance", typeof(string));
-        table.Columns.Add("ExpiryDate", typeof(DateTime));
-        table.Columns.Add("DaysLeft", typeof(int));
-        table.Columns.Add("Quantity", typeof(string));
-        table.Columns.Add("UserName", typeof(string));
-        table.Columns.Add("PhotoUrl", typeof(string));
-
         string viewerCity = UserAuth.IsLoggedIn(Session) ? UserAuth.UserCity(Session) : null;
+
+        currentItems = new List<FoodItemView>();
 
         foreach (Dictionary<string, object> row in rows)
         {
@@ -140,29 +170,32 @@ public partial class FoodBoard : System.Web.UI.Page
 
             string pickupCity = row["pickup_city"].ToString();
             double? distance = GeoHelper.DistanceKm(viewerCity, pickupCity);
-            string distanceText = distance.HasValue ? Math.Round(distance.Value) + " ק\"מ" : "-";
+            string distanceText = distance.HasValue ? Math.Round(distance.Value) + " ק\"מ" : "מרחק לא ידוע";
 
             bool photoDisabled = row.ContainsKey("photo_disabled") && Convert.ToBoolean(row["photo_disabled"]);
             string photoUrl = (!photoDisabled && row.ContainsKey("photo_url") && row["photo_url"] != null)
                 ? row["photo_url"].ToString() : "";
 
-            table.Rows.Add(
-                row["id"].ToString(),
-                row["user_id"].ToString(),
-                row["item_name"].ToString(),
-                row["category"].ToString(),
-                pickupCity,
-                GeoHelper.PartialLocation(row["pickup_location"].ToString()),
-                distanceText,
-                expiry,
-                daysLeft,
-                row["quantity"].ToString(),
-                userName,
-                photoUrl);
+            currentItems.Add(new FoodItemView
+            {
+                ItemId = row["id"].ToString(),
+                UserId = row["user_id"].ToString(),
+                ItemName = row["item_name"].ToString(),
+                Category = row["category"].ToString(),
+                PickupCity = pickupCity,
+                PickupLocation = GeoHelper.PartialLocation(row["pickup_location"].ToString()),
+                Distance = distanceText,
+                ExpiryDate = expiry,
+                DaysLeft = daysLeft,
+                Quantity = row["quantity"].ToString(),
+                UserName = userName,
+                PhotoUrl = photoUrl
+            });
         }
 
-        gvItems.DataSource = table;
-        gvItems.DataBind();
+        rptItems.DataSource = currentItems;
+        rptItems.DataBind();
+        lblEmpty.Visible = currentItems.Count == 0;
     }
 
     public bool CanEdit(object itemUserId)
@@ -190,7 +223,7 @@ public partial class FoodBoard : System.Web.UI.Page
         return UserAuth.UserId(Session) != itemUserId.ToString();
     }
 
-    protected void gvItems_RowCommand(object sender, GridViewCommandEventArgs e)
+    protected void rptItems_ItemCommand(object source, RepeaterCommandEventArgs e)
     {
         if (!UserAuth.IsLoggedIn(Session))
         {

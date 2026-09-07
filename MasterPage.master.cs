@@ -15,20 +15,13 @@ public partial class MasterPage : System.Web.UI.MasterPage
 
         lnkRegister.Visible = !loggedIn;
         lnkLogin.Visible = !loggedIn;
-        litS4.Visible = !loggedIn;
-        litS5.Visible = !loggedIn;
 
         lnkAddItem.Visible = loggedIn;
         lnkSurvey.Visible = loggedIn;
         lnkLogout.Visible = loggedIn;
         lnkMessages.Visible = loggedIn;
-        litS6.Visible = loggedIn;
-        litS7.Visible = loggedIn;
-        litS8.Visible = loggedIn;
-        litS10.Visible = loggedIn;
 
         lnkAdmin.Visible = isAdmin;
-        litS9.Visible = isAdmin;
 
         if (loggedIn)
         {

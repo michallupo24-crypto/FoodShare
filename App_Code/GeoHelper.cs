@@ -83,7 +83,7 @@ public static class GeoHelper
     public static string PartialLocation(string fullLocation)
     {
         if (string.IsNullOrWhiteSpace(fullLocation))
-            return fullLocation;
+            return "(פרטים מלאים בצ'אט עם המפרסם/ת)";
 
         string trimmed = Regex.Replace(fullLocation.Trim(), @"\s*\d+\s*$", "");
         return string.IsNullOrWhiteSpace(trimmed) ? "(פרטים מלאים בצ'אט עם המפרסם/ת)" : trimmed;

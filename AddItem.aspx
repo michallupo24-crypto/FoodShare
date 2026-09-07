@@ -26,7 +26,8 @@
         </asp:DropDownList><br />
 
         <label>כתובת / מיקום מדויק:</label><br />
-        <asp:TextBox ID="txtLocation" runat="server" placeholder="רחוב, שכונה..." required="true"></asp:TextBox><br />
+        <asp:TextBox ID="txtLocation" runat="server" placeholder="רחוב, שכונה..." required="true"></asp:TextBox>
+        <span id="locationOptionalNote" class="chat-item-context" style="display:none">שיתפת מיקום GPS - אין חובה למלא גם כתובת בטקסט.</span><br />
 
         <asp:HiddenField ID="hdnLat" runat="server" />
         <asp:HiddenField ID="hdnLon" runat="server" />
@@ -69,6 +70,9 @@
                 document.getElementById('<%= hdnLat.ClientID %>').value = pos.coords.latitude;
                 document.getElementById('<%= hdnLon.ClientID %>').value = pos.coords.longitude;
                 status.textContent = "המיקום שותף בהצלחה. מי שיחפש יראה מרחק מדויק.";
+                var txtLoc = document.getElementById('<%= txtLocation.ClientID %>');
+                txtLoc.removeAttribute('required');
+                document.getElementById('locationOptionalNote').style.display = 'inline';
             }, function () {
                 status.textContent = "שיתוף המיקום נכשל או נדחה - אפשר לפרסם גם בלעדיו.";
             });

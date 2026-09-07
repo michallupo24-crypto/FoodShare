@@ -56,6 +56,17 @@ public partial class AddItem : System.Web.UI.Page
         string token = UserAuth.AccessToken(Session);
         string userId = UserAuth.UserId(Session);
 
+        double lat = 0, lon = 0;
+        bool hasLocation = double.TryParse(hdnLat.Value, System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out lat) &&
+            double.TryParse(hdnLon.Value, System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out lon);
+
+        if (!hasLocation && string.IsNullOrWhiteSpace(txtLocation.Text))
+        {
+            lblMessage.ForeColor = System.Drawing.Color.Red;
+            lblMessage.Text = "יש למלא כתובת, או לשתף מיקום GPS.";
+            return;
+        }
+
         var item = new Dictionary<string, object>
         {
             { "user_id", userId },
@@ -67,9 +78,7 @@ public partial class AddItem : System.Web.UI.Page
             { "pickup_location", txtLocation.Text.Trim() }
         };
 
-        double lat, lon;
-        if (double.TryParse(hdnLat.Value, System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out lat) &&
-            double.TryParse(hdnLon.Value, System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out lon))
+        if (hasLocation)
         {
             item["lat"] = lat;
             item["lon"] = lon;

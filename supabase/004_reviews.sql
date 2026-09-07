@@ -38,8 +38,13 @@ create policy "can review after messaging about the item"
   );
 
 -- true anonymity, not just a UI choice: nobody (any role, any query) can ever
--- select reviewer_id back out through the API, including the reviewer themself
-revoke select (reviewer_id) on public.reviews from authenticated, anon;
+-- select reviewer_id back out through the API, including the reviewer themself.
+-- IMPORTANT: revoke the table-level privilege first - Supabase grants table-level
+-- SELECT to `anon`/`authenticated` by default on every new table, and that covers
+-- every column regardless of any column-level revoke layered on top of it.
+revoke select on public.reviews from authenticated, anon;
+grant select (id, reviewee_id, item_id, rating, comment, created_at)
+  on public.reviews to authenticated, anon;
 
 -- one row per reviewee with their average rating and review count - lets the
 -- app avoid computing this per-page-load with a manual aggregate query

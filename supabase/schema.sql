@@ -52,7 +52,10 @@ create policy "admins can delete profiles"
 -- Column-level lockdown: nobody can directly UPDATE is_admin or login_count through PostgREST,
 -- even on their own row (RLS is row-level, not column-level, so this needs an explicit REVOKE).
 -- Changing them only happens through the SECURITY DEFINER functions below.
-revoke update (is_admin, login_count) on public.profiles from authenticated;
+-- IMPORTANT: revoke the table-level privilege first - Supabase grants table-level
+-- UPDATE to `authenticated` by default on every new table, and that covers every
+-- column regardless of any column-level revoke you layer on top of it.
+revoke update on public.profiles from authenticated;
 grant update (username, first_name, last_name, phone_prefix, phone_number, birth_year, gender, city)
   on public.profiles to authenticated;
 

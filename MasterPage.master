@@ -1,0 +1,59 @@
+﻿<%@ Master Language="C#" AutoEventWireup="true" CodeFile="MasterPage.master.cs" Inherits="MasterPage" %>
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head runat="server">
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <meta charset="utf-8" />
+    <title>שיתוף מזון - FoodShare</title>
+   <link href="StyleSheet.css" rel="stylesheet" type="text/css" />
+    <asp:ContentPlaceHolder id="head" runat="server"></asp:ContentPlaceHolder>
+</head>
+<body>
+    <form id="form1" runat="server">
+        <table class="main-table">
+            <tr>
+                <td colspan="3" class="header">
+                    <h1>פרויקט שיתוף מזון</h1>
+                    <asp:Label ID="lblUserStatus" runat="server"></asp:Label>
+                    <nav>
+                        <asp:HyperLink ID="lnkHome" runat="server" NavigateUrl="HomePage.aspx" Text="דף הבית" />
+                        <asp:Literal ID="litS1" runat="server" Text=" | " />
+                        <asp:HyperLink ID="lnkAbout" runat="server" NavigateUrl="AboutWebsite.aspx" Text="אודות" />
+                        <asp:Literal ID="litS2" runat="server" Text=" | " />
+                        <asp:HyperLink ID="lnkMap" runat="server" NavigateUrl="AboutMe.aspx" Text="מפת אתר" />
+                        <asp:Literal ID="litS3" runat="server" Text=" | " />
+                        <asp:HyperLink ID="lnkRegister" runat="server" NavigateUrl="regestaration.aspx" Text="הרשמה" />
+                        <asp:Literal ID="litS4" runat="server" Text=" | " />
+                        <asp:HyperLink ID="lnkLogin" runat="server" NavigateUrl="login.aspx" Text="כניסה" />
+                         <asp:Literal ID="Literal1" runat="server" Text=" | " />
+ <asp:HyperLink ID="HyperLink1" runat="server" NavigateUrl="Categories.aspx" Text="גלריית קטגוריות" />
+                        <asp:Literal ID="litS5" runat="server" Text=" | " />
+                        <asp:HyperLink ID="lnkBoard" runat="server" NavigateUrl="FoodBoard.aspx" Text="לוח מודעות" />
+                        <asp:Literal ID="litS6" runat="server" Text=" | " />
+                        <asp:HyperLink ID="lnkAddItem" runat="server" NavigateUrl="AddItem.aspx" Text="הוספת מוצר" Visible="false" />
+                        <asp:Literal ID="litS7" runat="server" Text=" | " Visible="false" />
+                        <asp:HyperLink ID="lnkSurvey" runat="server" NavigateUrl="Survey.aspx" Text="סקר" Visible="false" />
+                        <asp:Literal ID="litS8" runat="server" Text=" | " Visible="false" />
+                        <asp:HyperLink ID="lnkAdmin" runat="server" NavigateUrl="AdminPanel.aspx" Text="ניהול מנהל" Visible="false" />
+                        <asp:Literal ID="litS9" runat="server" Text=" | " Visible="false" />
+                        <asp:HyperLink ID="lnkLogout" runat="server" NavigateUrl="logout.aspx" Text="יציאה" Visible="false" />
+                    </nav>
+                </td>
+            </tr>
+            <tr>
+                <td class="side-bar"></td>
+                <td class="main-content">
+                    <asp:ContentPlaceHolder id="ContentPlaceHolder1" runat="server">
+                    </asp:ContentPlaceHolder>
+                </td>
+                <td class="side-bar"></td>
+            </tr>
+            <tr>
+                <td colspan="3" class="footer">
+                     צור קשר: <a href="mailto:bagrutprojectfeedback@gmail.com">bagrutprojectfeedback@gmail.com</a>
+                </td>
+            </tr>
+        </table>
+    </form>
+</body>
+</html>

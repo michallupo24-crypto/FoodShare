@@ -1,0 +1,35 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<SurveyResults>
+  <Response>
+    <UserID>3</UserID>
+    <Answer>כן מאוד</Answer>
+  </Response>
+  <Response>
+    <UserID>1</UserID>
+    <Answer>במידה מסוימת</Answer>
+  </Response>
+  <Response>
+    <UserID>1</UserID>
+    <Answer>כן מאוד</Answer>
+  </Response>
+  <Response>
+    <UserID>1</UserID>
+    <Answer>כן מאוד</Answer>
+  </Response>
+  <Response>
+    <UserID>1</UserID>
+    <Answer>כן מאוד</Answer>
+  </Response>
+  <Response>
+    <UserID>9</UserID>
+    <Answer>כן מאוד</Answer>
+  </Response>
+  <Response>
+    <UserID>1</UserID>
+    <Answer>לא ממש</Answer>
+  </Response>
+  <Response>
+    <UserID>1</UserID>
+    <Answer>כן מאוד</Answer>
+  </Response>
+</SurveyResults>

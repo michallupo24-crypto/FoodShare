@@ -2,7 +2,7 @@
 
 <asp:Content ID="Content1" ContentPlaceHolderID="ContentPlaceHolder1" Runat="Server">
     <div class="chat-container">
-        <h2>שיחה עם <%= Server.HtmlEncode(OtherUsername) %></h2>
+        <h2>שיחה עם <a href='<%= "Profile.aspx?id=" + Server.UrlEncode(OtherUserId) %>'><%= Server.HtmlEncode(OtherUsername) %></a></h2>
         <% if (!string.IsNullOrEmpty(ItemName)) { %>
             <p class="chat-item-context">בנוגע למוצר: <%= Server.HtmlEncode(ItemName) %></p>
         <% } %>
@@ -22,6 +22,28 @@
             <button type="button" id="chatSendBtn">שליחה</button>
         </div>
         <p id="chatError" class="chat-error"></p>
+
+        <% if (CanReview && !AlreadyReviewed) { %>
+            <div class="review-form">
+                <h3>איך היה המפגש?</h3>
+                <asp:Label ID="lblReviewMessage" runat="server"></asp:Label>
+                <label>דירוג:</label>
+                <asp:DropDownList ID="ddlRating" runat="server">
+                    <asp:ListItem Value="5" Text="5 - מצוין" Selected="True" />
+                    <asp:ListItem Value="4" Text="4 - טוב" />
+                    <asp:ListItem Value="3" Text="3 - סביר" />
+                    <asp:ListItem Value="2" Text="2 - לא טוב" />
+                    <asp:ListItem Value="1" Text="1 - גרוע" />
+                </asp:DropDownList>
+                <br />
+                <asp:TextBox ID="txtReviewComment" runat="server" TextMode="MultiLine" Rows="2" placeholder="הערה (לא חובה)..."></asp:TextBox>
+                <br />
+                <asp:Button ID="btnSubmitReview" runat="server" Text="שליחת ביקורת אנונימית" OnClick="btnSubmitReview_Click" />
+            </div>
+        <% } else if (AlreadyReviewed) { %>
+            <p class="chat-item-context">כבר השארתם ביקורת על המפגש הזה. תודה!</p>
+        <% } %>
+
         <p><a href="Messages.aspx">חזרה להודעות</a></p>
     </div>
 

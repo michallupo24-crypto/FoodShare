@@ -12,6 +12,8 @@ public partial class Chat : System.Web.UI.Page
     protected string ItemName;
     protected string ItemPickupLocation;
     protected bool CanShareAddress;
+    protected bool CanReview;
+    protected bool AlreadyReviewed;
 
     protected void Page_Load(object sender, EventArgs e)
     {
@@ -26,6 +28,7 @@ public partial class Chat : System.Web.UI.Page
 
         ItemId = Request.QueryString["item"];
         string token = UserAuth.AccessToken(Session);
+        string myId = UserAuth.UserId(Session);
 
         List<Dictionary<string, object>> otherProfile = SupabaseRest.Select(
             "profiles", "id=eq." + OtherUserId + "&select=username", token);
@@ -46,7 +49,22 @@ public partial class Chat : System.Web.UI.Page
             {
                 ItemName = item[0]["item_name"].ToString();
                 ItemPickupLocation = item[0]["pickup_location"].ToString();
-                CanShareAddress = item[0]["user_id"].ToString() == UserAuth.UserId(Session);
+                CanShareAddress = item[0]["user_id"].ToString() == myId;
+            }
+
+            try
+            {
+                List<Dictionary<string, object>> existingReview = SupabaseRest.Select(
+                    "reviews",
+                    "select=id&reviewer_id=eq." + myId + "&reviewee_id=eq." + OtherUserId + "&item_id=eq." + ItemId,
+                    token);
+                AlreadyReviewed = existingReview.Count > 0;
+                CanReview = true;
+            }
+            catch (Exception)
+            {
+                // טבלת reviews עדיין לא קיימת (לפני הרצת 004_reviews.sql) - לא מפילים את כל הצ'אט בשביל זה
+                CanReview = false;
             }
         }
 
@@ -55,6 +73,33 @@ public partial class Chat : System.Web.UI.Page
             LoadHistory(token);
             SupabaseRest.Rpc("mark_conversation_read",
                 new Dictionary<string, object> { { "other_user", OtherUserId } }, token);
+        }
+    }
+
+    protected void btnSubmitReview_Click(object sender, EventArgs e)
+    {
+        int rating = Convert.ToInt32(ddlRating.SelectedValue);
+
+        var review = new Dictionary<string, object>
+        {
+            { "reviewer_id", UserAuth.UserId(Session) },
+            { "reviewee_id", OtherUserId },
+            { "item_id", Convert.ToInt64(ItemId) },
+            { "rating", rating },
+            { "comment", txtReviewComment.Text.Trim() }
+        };
+
+        try
+        {
+            SupabaseRest.Insert("reviews", review, UserAuth.AccessToken(Session));
+            AlreadyReviewed = true;
+            lblReviewMessage.ForeColor = System.Drawing.Color.Green;
+            lblReviewMessage.Text = "תודה! הביקורת נשלחה.";
+        }
+        catch (Exception)
+        {
+            lblReviewMessage.ForeColor = System.Drawing.Color.Red;
+            lblReviewMessage.Text = "לא הצלחנו לשמור את הביקורת (אולי כבר השארתם ביקורת על המפגש הזה).";
         }
     }
 

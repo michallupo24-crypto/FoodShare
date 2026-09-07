@@ -38,7 +38,12 @@
             <asp:BoundField DataField="ExpiryDate" HeaderText="תאריך תפוגה" DataFormatString="{0:dd/MM/yyyy}" />
             <asp:BoundField DataField="DaysLeft" HeaderText="ימים לפג תוקף" />
             <asp:BoundField DataField="Quantity" HeaderText="כמות" />
-            <asp:BoundField DataField="UserName" HeaderText="מפרסם" />
+            <asp:TemplateField HeaderText="מפרסם">
+                <ItemTemplate>
+                    <asp:HyperLink ID="lnkProfile" runat="server" NavigateUrl='<%# "Profile.aspx?id=" + Eval("UserID") %>'
+                        Text='<%# Eval("UserName") %>' />
+                </ItemTemplate>
+            </asp:TemplateField>
             <asp:TemplateField HeaderText="פעולות">
                 <ItemTemplate>
                     <asp:HyperLink ID="lnkEdit" runat="server" NavigateUrl='<%# "EditItem.aspx?id=" + Eval("ItemID") %>'

@@ -1,5 +1,5 @@
 using System;
-using System.Data.OleDb;
+using System.Collections.Generic;
 using System.Web.UI;
 
 public partial class regestaration : System.Web.UI.Page
@@ -8,10 +8,7 @@ public partial class regestaration : System.Web.UI.Page
 
     protected void Page_Load(object sender, EventArgs e)
     {
-        bool loggedAdmin = Session["isAdmin"] != null && (bool)Session["isAdmin"] == true;
-        bool loggedUser = Session["isUser"] != null && (bool)Session["isUser"] == true;
-
-        if (loggedAdmin || loggedUser)
+        if (UserAuth.IsLoggedIn(Session))
         {
             Session["message"] = "לא ניתן להירשם כשאתם כבר מחוברים. התנתקו קודם.";
             Response.Redirect("Message.aspx");
@@ -32,35 +29,36 @@ public partial class regestaration : System.Web.UI.Page
         string gender = Request.Form["Gender"];
         string city = Request.Form["City"];
 
-        bool exists = MyAdoHelperAccess.IsExist(
-            "SELECT UserName FROM Users WHERE UserName = ?",
-            new OleDbParameter("UserName", OleDbType.VarWChar) { Value = userName });
+        SupabaseAuthResult result = SupabaseAuth.SignUp(email, password);
 
-        if (exists)
+        if (!result.Success)
         {
-            msg = "שם משתמש זה תפוס. בחרו שם אחר.";
+            msg = "ההרשמה נכשלה: " + result.ErrorMessage;
         }
         else
         {
-            string sqlSignup = @"INSERT INTO Users ([FirstName], [LastName], [UserName], [Email], [Password], [BirthYear], [Gender], [PhonePrefix], [PhoneNumber], [City], [idification], [isAdmin], [loginCount])
-                                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+            var profile = new Dictionary<string, object>
+            {
+                { "id", result.UserId },
+                { "username", userName },
+                { "first_name", firstName },
+                { "last_name", lastName },
+                { "phone_prefix", phonePrefix },
+                { "phone_number", phoneNumber },
+                { "birth_year", birthYear },
+                { "gender", gender },
+                { "city", city }
+            };
 
-            MyAdoHelperAccess.ExecuteNonQuery(sqlSignup,
-                new OleDbParameter("FirstName", OleDbType.VarWChar) { Value = firstName },
-                new OleDbParameter("LastName", OleDbType.VarWChar) { Value = lastName },
-                new OleDbParameter("UserName", OleDbType.VarWChar) { Value = userName },
-                new OleDbParameter("Email", OleDbType.VarWChar) { Value = email },
-                new OleDbParameter("Password", OleDbType.VarWChar) { Value = PasswordHasher.Hash(password) },
-                new OleDbParameter("BirthYear", OleDbType.Integer) { Value = birthYear },
-                new OleDbParameter("Gender", OleDbType.VarWChar) { Value = gender },
-                new OleDbParameter("PhonePrefix", OleDbType.VarWChar) { Value = phonePrefix },
-                new OleDbParameter("PhoneNumber", OleDbType.VarWChar) { Value = phoneNumber },
-                new OleDbParameter("City", OleDbType.VarWChar) { Value = city },
-                new OleDbParameter("idification", OleDbType.VarWChar) { Value = "" },
-                new OleDbParameter("isAdmin", OleDbType.Boolean) { Value = false },
-                new OleDbParameter("loginCount", OleDbType.Integer) { Value = 0 });
-
-            msg = "ברוכים הבאים לאתר! נרשמת בהצלחה.";
+            try
+            {
+                SupabaseRest.Insert("profiles", profile, result.AccessToken);
+                msg = "ברוכים הבאים לאתר! נרשמת בהצלחה.";
+            }
+            catch (Exception)
+            {
+                msg = "החשבון נוצר אך שמירת פרטי הפרופיל נכשלה (ייתכן ששם המשתמש כבר תפוס). נסו שם משתמש אחר או פנו למנהל/ת האתר.";
+            }
         }
 
         msg += "<br/><br/><a href='login.aspx'>להתחברות</a>";

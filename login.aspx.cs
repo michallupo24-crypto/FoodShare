@@ -1,16 +1,12 @@
 using System;
-using System.Data;
-using System.Data.OleDb;
+using System.Collections.Generic;
 using System.Web.UI;
 
 public partial class login : System.Web.UI.Page
 {
     protected void Page_Load(object sender, EventArgs e)
     {
-        bool loggedAdmin = Session["isAdmin"] != null && (bool)Session["isAdmin"] == true;
-        bool loggedUser = Session["isUser"] != null && (bool)Session["isUser"] == true;
-
-        if (loggedAdmin || loggedUser)
+        if (UserAuth.IsLoggedIn(Session))
         {
             Session["message"] = "לא ניתן להתחבר כשאתם כבר מחוברים. התנתקו כדי להתחבר לחשבון אחר.";
             Response.Redirect("Message.aspx");
@@ -20,72 +16,41 @@ public partial class login : System.Web.UI.Page
         if (Request.Form["mySubmit"] == null)
             return;
 
-        string userName = Request.Form["UserName"];
+        string email = Request.Form["Email"];
         string password = Request.Form["Password"];
 
-        DataTable dt = MyAdoHelperAccess.ExecuteDataTable(
-            "SELECT UserName, isAdmin, id, loginCount, Password FROM Users WHERE UserName = ?",
-            new OleDbParameter("UserName", OleDbType.VarWChar) { Value = userName });
+        SupabaseAuthResult result = SupabaseAuth.SignIn(email, password);
 
-        bool found = false;
-        if (dt.Rows.Count > 0)
+        if (!result.Success)
         {
-            string storedPassword = dt.Rows[0]["Password"].ToString();
-
-            if (PasswordHasher.IsHashed(storedPassword))
-            {
-                found = PasswordHasher.Verify(password, storedPassword);
-            }
-            else if (storedPassword == password)
-            {
-                // חשבון ישן עם סיסמה בטקסט גלוי - מאמתים ומעדכנים בשקט להצפנה
-                found = true;
-                MyAdoHelperAccess.ExecuteNonQuery(
-                    "UPDATE Users SET Password = ? WHERE id = ?",
-                    new OleDbParameter("Password", OleDbType.VarWChar) { Value = PasswordHasher.Hash(password) },
-                    new OleDbParameter("id", OleDbType.Integer) { Value = Convert.ToInt32(dt.Rows[0]["id"]) });
-            }
+            Session["message"] = "ההתחברות נכשלה: " + result.ErrorMessage + "<br/><br/><a href='regestaration.aspx'>להרשמה</a>";
+            Response.Redirect("Message.aspx");
+            return;
         }
 
-        if (found)
+        List<Dictionary<string, object>> profiles = SupabaseRest.Select(
+            "profiles",
+            "id=eq." + result.UserId + "&select=*",
+            result.AccessToken);
+
+        if (profiles.Count == 0)
         {
-            bool isAdmin = Convert.ToBoolean(dt.Rows[0]["isAdmin"]);
-            int userId = Convert.ToInt32(dt.Rows[0]["id"]);
-
-            int oldCount = 0;
-            if (dt.Rows[0]["loginCount"] != DBNull.Value)
-                oldCount = Convert.ToInt32(dt.Rows[0]["loginCount"]);
-
-            int newCount = oldCount + 1;
-            MyAdoHelperAccess.ExecuteNonQuery(
-                "UPDATE Users SET loginCount = ? WHERE id = ?",
-                new OleDbParameter("loginCount", OleDbType.Integer) { Value = newCount },
-                new OleDbParameter("id", OleDbType.Integer) { Value = userId });
-
-            Session["userName"] = userName;
-            Session["UserID"] = userId.ToString();
-            Session["loginCount"] = newCount;
-
-            if (isAdmin)
-            {
-                Session["isAdmin"] = true;
-                Session["isUser"] = false;
-            }
-            else
-            {
-                Session["isUser"] = true;
-                Session["isAdmin"] = false;
-            }
-
-            Session["message"] = "ההתחברות בהצלחה! זו כניסה מספר " + newCount + ".<br/><br/><a href='HomePage.aspx'>לדף הבית</a>";
-        }
-        else
-        {
-            Session["isUser"] = false;
-            Session["isAdmin"] = false;
-            Session["message"] = "לא נמצא חשבונך.<br/><br/><a href='regestaration.aspx'>להרשמה</a>";
+            Session["message"] = "החשבון קיים אך פרופיל המשתמש חסר. פנו למנהל/ת האתר.";
+            Response.Redirect("Message.aspx");
+            return;
         }
 
+        Dictionary<string, object> profile = profiles[0];
+        int newCount = Convert.ToInt32(profile["login_count"]) + 1;
+        SupabaseRest.Rpc("increment_login_count", null, result.AccessToken);
+
+        Session["SupabaseUserId"] = result.UserId;
+        Session["SupabaseAccessToken"] = result.AccessToken;
+        Session["userName"] = profile["username"].ToString();
+        Session["isAdmin"] = Convert.ToBoolean(profile["is_admin"]);
+        Session["loginCount"] = newCount;
+
+        Session["message"] = "ההתחברות בהצלחה! זו כניסה מספר " + newCount + ".<br/><br/><a href='HomePage.aspx'>לדף הבית</a>";
         Response.Redirect("Message.aspx");
     }
 }

@@ -27,7 +27,6 @@
                 <asp:BoundField DataField="FirstName" HeaderText="שם פרטי" />
                 <asp:BoundField DataField="LastName" HeaderText="שם משפחה" />
                 <asp:BoundField DataField="City" HeaderText="עיר" />
-                <asp:BoundField DataField="Email" HeaderText="אימייל" />
                 <asp:BoundField DataField="loginCount" HeaderText="כניסות" />
             </Columns>
         </asp:GridView>

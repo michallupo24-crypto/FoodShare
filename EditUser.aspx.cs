@@ -1,18 +1,18 @@
 using System;
-using System.Data;
-using System.Data.OleDb;
+using System.Collections.Generic;
 using System.Web.UI;
 
 public partial class EditUser : System.Web.UI.Page
 {
-    private int userId;
+    private string userId;
 
     protected void Page_Load(object sender, EventArgs e)
     {
         UserAuth.RequireLogin(Session, "EditUser.aspx");
         UserAuth.RequireAdmin(Session);
 
-        if (!int.TryParse(Request.QueryString["id"], out userId))
+        userId = Request.QueryString["id"];
+        if (string.IsNullOrEmpty(userId))
         {
             Response.Redirect("AdminPanel.aspx");
             return;
@@ -24,65 +24,52 @@ public partial class EditUser : System.Web.UI.Page
 
     private void LoadUser()
     {
-        DataTable dt = MyAdoHelperAccess.ExecuteDataTable(
-            "SELECT * FROM Users WHERE id = ?",
-            new OleDbParameter("id", OleDbType.Integer) { Value = userId });
+        List<Dictionary<string, object>> rows = SupabaseRest.Select(
+            "profiles", "id=eq." + userId + "&select=*", UserAuth.AccessToken(Session));
 
-        if (dt.Rows.Count == 0)
+        if (rows.Count == 0)
         {
             Response.Redirect("AdminPanel.aspx");
             return;
         }
 
-        DataRow r = dt.Rows[0];
-        txtFirstName.Text = r["FirstName"].ToString();
-        txtLastName.Text = r["LastName"].ToString();
-        txtUserName.Text = r["UserName"].ToString();
-        txtEmail.Text = r["Email"].ToString();
-        txtPassword.Text = "";
-        txtPhonePrefix.Text = r["PhonePrefix"].ToString();
-        txtPhoneNumber.Text = r["PhoneNumber"].ToString();
-        txtBirthYear.Text = r["BirthYear"].ToString();
-        txtGender.Text = r["Gender"].ToString();
-        txtCity.Text = r["City"].ToString();
-        txtLoginCount.Text = r["loginCount"] == DBNull.Value ? "0" : r["loginCount"].ToString();
-        chkIsAdmin.Checked = r["isAdmin"] != DBNull.Value && Convert.ToBoolean(r["isAdmin"]);
+        Dictionary<string, object> r = rows[0];
+        txtFirstName.Text = r["first_name"].ToString();
+        txtLastName.Text = r["last_name"].ToString();
+        txtUserName.Text = r["username"].ToString();
+        txtPhonePrefix.Text = r["phone_prefix"] != null ? r["phone_prefix"].ToString() : "";
+        txtPhoneNumber.Text = r["phone_number"] != null ? r["phone_number"].ToString() : "";
+        txtBirthYear.Text = r["birth_year"] != null ? r["birth_year"].ToString() : "";
+        txtGender.Text = r["gender"] != null ? r["gender"].ToString() : "";
+        txtCity.Text = r["city"] != null ? r["city"].ToString() : "";
+        txtLoginCount.Text = r["login_count"] != null ? r["login_count"].ToString() : "0";
+        chkIsAdmin.Checked = r["is_admin"] != null && Convert.ToBoolean(r["is_admin"]);
     }
 
     protected void btnSave_Click(object sender, EventArgs e)
     {
-        string sql = @"UPDATE Users SET [FirstName]=?, [LastName]=?, [UserName]=?, [Email]=?,
-                       [PhonePrefix]=?, [PhoneNumber]=?, [BirthYear]=?, [Gender]=?, [City]=?,
-                       [loginCount]=?, [isAdmin]=?";
+        string token = UserAuth.AccessToken(Session);
 
-        if (!string.IsNullOrEmpty(txtPassword.Text))
-            sql += ", [Password]=?";
-
-        sql += " WHERE id=?";
-
-        var cmdParams = new System.Collections.Generic.List<OleDbParameter>
+        var patch = new Dictionary<string, object>
         {
-            new OleDbParameter("FirstName", OleDbType.VarWChar) { Value = txtFirstName.Text.Trim() },
-            new OleDbParameter("LastName", OleDbType.VarWChar) { Value = txtLastName.Text.Trim() },
-            new OleDbParameter("UserName", OleDbType.VarWChar) { Value = txtUserName.Text.Trim() },
-            new OleDbParameter("Email", OleDbType.VarWChar) { Value = txtEmail.Text.Trim() },
-            new OleDbParameter("PhonePrefix", OleDbType.VarWChar) { Value = txtPhonePrefix.Text.Trim() },
-            new OleDbParameter("PhoneNumber", OleDbType.VarWChar) { Value = txtPhoneNumber.Text.Trim() },
-            new OleDbParameter("BirthYear", OleDbType.Integer) { Value = Convert.ToInt32(txtBirthYear.Text) },
-            new OleDbParameter("Gender", OleDbType.VarWChar) { Value = txtGender.Text.Trim() },
-            new OleDbParameter("City", OleDbType.VarWChar) { Value = txtCity.Text.Trim() },
-            new OleDbParameter("loginCount", OleDbType.Integer) { Value = Convert.ToInt32(txtLoginCount.Text) },
-            new OleDbParameter("isAdmin", OleDbType.Boolean) { Value = chkIsAdmin.Checked }
+            { "first_name", txtFirstName.Text.Trim() },
+            { "last_name", txtLastName.Text.Trim() },
+            { "username", txtUserName.Text.Trim() },
+            { "phone_prefix", txtPhonePrefix.Text.Trim() },
+            { "phone_number", txtPhoneNumber.Text.Trim() },
+            { "birth_year", Convert.ToInt32(txtBirthYear.Text) },
+            { "gender", txtGender.Text.Trim() },
+            { "city", txtCity.Text.Trim() }
         };
 
-        if (!string.IsNullOrEmpty(txtPassword.Text))
-            cmdParams.Add(new OleDbParameter("Password", OleDbType.VarWChar) { Value = PasswordHasher.Hash(txtPassword.Text) });
+        SupabaseRest.Update("profiles", "id=eq." + userId, patch, token);
 
-        cmdParams.Add(new OleDbParameter("id", OleDbType.Integer) { Value = userId });
+        // is_admin נעול מ-UPDATE ישיר (RLS + column grant) ומשתנה רק דרך הפונקציה הזו,
+        // כדי שאף משתמש/ת לא יוכל/תוכל לקדם את עצמו/ה למנהל/ת
+        SupabaseRest.Rpc("set_admin_status",
+            new Dictionary<string, object> { { "target_user", userId }, { "new_value", chkIsAdmin.Checked } },
+            token);
 
-        MyAdoHelperAccess.ExecuteNonQuery(sql, cmdParams.ToArray());
-
-        txtPassword.Text = "";
         lblMessage.ForeColor = System.Drawing.Color.Green;
         lblMessage.Text = "המשתמש עודכן בהצלחה.";
     }

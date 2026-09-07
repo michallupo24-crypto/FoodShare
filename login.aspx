@@ -4,8 +4,8 @@
     <div class="form-container">
         <h2>כניסה למערכת</h2>
 
-        <label>שם משתמש:</label><br />
-        <input type="text" name="UserName" required /><br />
+        <label>אימייל:</label><br />
+        <input type="email" name="Email" required /><br />
 
         <label>סיסמה:</label><br />
         <input type="password" name="Password" required /><br /><br />

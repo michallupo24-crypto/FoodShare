@@ -11,7 +11,6 @@
             <asp:BoundField DataField="UserName" HeaderText="שם משתמש" />
             <asp:BoundField DataField="FirstName" HeaderText="שם פרטי" />
             <asp:BoundField DataField="LastName" HeaderText="שם משפחה" />
-            <asp:BoundField DataField="Email" HeaderText="אימייל" />
             <asp:BoundField DataField="City" HeaderText="עיר" />
             <asp:BoundField DataField="loginCount" HeaderText="כניסות" />
             <asp:CheckBoxField DataField="isAdmin" HeaderText="מנהל" ReadOnly="True" />

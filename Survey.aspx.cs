@@ -8,12 +8,7 @@ public partial class Survey : System.Web.UI.Page
 {
     protected void Page_Load(object sender, EventArgs e)
     {
-        // בדיקה אם המשתמש מחובר (לפי הפונקציה שלך)
-        if (Session["UserID"] == null)
-        {
-            Response.Redirect("login.aspx");
-            return;
-        }
+        UserAuth.RequireLogin(Session, "Survey.aspx");
 
         if (!IsPostBack) ShowResults();
     }
@@ -34,7 +29,7 @@ public partial class Survey : System.Web.UI.Page
 
         // הוספת תשובה
         doc.Root.Add(new XElement("Response",
-            new XElement("UserID", Session["UserID"].ToString()),
+            new XElement("UserID", UserAuth.UserId(Session)),
             new XElement("Answer", rblAnswer.SelectedValue)
         ));
 

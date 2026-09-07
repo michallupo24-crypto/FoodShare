@@ -5,14 +5,22 @@ public static class UserAuth
 {
     public static bool IsLoggedIn(HttpSessionState session)
     {
-        bool loggedAdmin = session["isAdmin"] != null && (bool)session["isAdmin"];
-        bool loggedUser = session["isUser"] != null && (bool)session["isUser"];
-        return loggedAdmin || loggedUser;
+        return session["SupabaseUserId"] != null;
     }
 
     public static bool IsAdmin(HttpSessionState session)
     {
         return session["isAdmin"] != null && (bool)session["isAdmin"];
+    }
+
+    public static string UserId(HttpSessionState session)
+    {
+        return session["SupabaseUserId"] as string;
+    }
+
+    public static string AccessToken(HttpSessionState session)
+    {
+        return session["SupabaseAccessToken"] as string;
     }
 
     public static void RequireLogin(HttpSessionState session, string returnUrl)

@@ -1,6 +1,6 @@
 using System;
+using System.Collections.Generic;
 using System.Data;
-using System.Data.OleDb;
 using System.IO;
 using System.Text;
 using System.Web.UI;
@@ -9,12 +9,6 @@ using System.Xml;
 
 public partial class FoodBoard : System.Web.UI.Page
 {
-    private class SearchQuery
-    {
-        public string Sql;
-        public OleDbParameter[] Parameters;
-    }
-
     protected void Page_Load(object sender, EventArgs e)
     {
         if (!IsPostBack)
@@ -26,11 +20,11 @@ public partial class FoodBoard : System.Web.UI.Page
             if (!string.IsNullOrEmpty(catFromUrl))
             {
                 ddlCategory.SelectedValue = catFromUrl;
-                LoadItems(BuildSearchSql());
+                LoadItems(BuildSearchQuery());
             }
             else
             {
-                LoadItems(null, null);
+                LoadItems(DefaultQuery());
             }
         }
     }
@@ -64,7 +58,7 @@ public partial class FoodBoard : System.Web.UI.Page
 
     protected void btnSearch_Click(object sender, EventArgs e)
     {
-        LoadItems(BuildSearchSql());
+        LoadItems(BuildSearchQuery());
         lblMessage.Text = "הסינון בוצע.";
     }
 
@@ -74,62 +68,80 @@ public partial class FoodBoard : System.Web.UI.Page
         ddlCategory.SelectedIndex = 0;
         ddlExpiry.SelectedIndex = 0;
         lblMessage.Text = "";
-        LoadItems(null, null);
+        LoadItems(DefaultQuery());
     }
 
-    private SearchQuery BuildSearchSql()
+    private string DefaultQuery()
     {
-        string sql = @"SELECT FoodItems.ItemID, FoodItems.UserID, FoodItems.ItemName, FoodItems.Category,
-                       FoodItems.PickupCity, FoodItems.PickupLocation, FoodItems.ExpiryDate, FoodItems.Quantity,
-                       Users.UserName, DateDiff('d', Date(), FoodItems.ExpiryDate) AS DaysLeft
-                       FROM FoodItems INNER JOIN Users ON FoodItems.UserID = Users.id
-                       WHERE FoodItems.ExpiryDate >= Date()";
+        string today = DateTime.Today.ToString("yyyy-MM-dd");
+        return "select=*,profiles(username)&expiry_date=gte." + today + "&order=expiry_date.asc";
+    }
 
-        var parameters = new System.Collections.Generic.List<OleDbParameter>();
+    private string BuildSearchQuery()
+    {
+        string today = DateTime.Today.ToString("yyyy-MM-dd");
+        string query = "select=*,profiles(username)&expiry_date=gte." + today;
 
         if (ddlCity.SelectedValue != "")
-        {
-            sql += " AND FoodItems.PickupCity = ?";
-            parameters.Add(new OleDbParameter("PickupCity", OleDbType.VarWChar) { Value = ddlCity.SelectedValue });
-        }
+            query += "&pickup_city=eq." + Uri.EscapeDataString(ddlCity.SelectedValue);
 
         if (ddlCategory.SelectedValue != "")
-        {
-            sql += " AND FoodItems.Category = ?";
-            parameters.Add(new OleDbParameter("Category", OleDbType.VarWChar) { Value = ddlCategory.SelectedValue });
-        }
+            query += "&category=eq." + Uri.EscapeDataString(ddlCategory.SelectedValue);
 
         if (ddlExpiry.SelectedValue != "")
         {
             int days = Convert.ToInt32(ddlExpiry.SelectedValue);
-            sql += " AND FoodItems.ExpiryDate <= DateAdd('d', ?, Date())";
-            parameters.Add(new OleDbParameter("Days", OleDbType.Integer) { Value = days });
+            string maxDate = DateTime.Today.AddDays(days).ToString("yyyy-MM-dd");
+            query += "&expiry_date=lte." + maxDate;
         }
 
-        sql += " ORDER BY FoodItems.ExpiryDate ASC";
-        return new SearchQuery { Sql = sql, Parameters = parameters.ToArray() };
+        query += "&order=expiry_date.asc";
+        return query;
     }
 
-    private void LoadItems(SearchQuery query)
+    // ה-GridView הקיים נשאר בלי שינוי - בונים DataTable מקומית באותם שמות עמודות שהיו מול ה-Access
+    private void LoadItems(string query)
     {
-        LoadItems(query.Sql, query.Parameters);
-    }
+        List<Dictionary<string, object>> rows = SupabaseRest.Select("food_items", query, UserAuth.AccessToken(Session));
 
-    private void LoadItems(string sql, OleDbParameter[] parameters)
-    {
-        if (string.IsNullOrEmpty(sql))
+        DataTable table = new DataTable();
+        table.Columns.Add("ItemID", typeof(string));
+        table.Columns.Add("UserID", typeof(string));
+        table.Columns.Add("ItemName", typeof(string));
+        table.Columns.Add("Category", typeof(string));
+        table.Columns.Add("PickupCity", typeof(string));
+        table.Columns.Add("PickupLocation", typeof(string));
+        table.Columns.Add("ExpiryDate", typeof(DateTime));
+        table.Columns.Add("DaysLeft", typeof(int));
+        table.Columns.Add("Quantity", typeof(string));
+        table.Columns.Add("UserName", typeof(string));
+
+        foreach (Dictionary<string, object> row in rows)
         {
-            sql = @"SELECT FoodItems.ItemID, FoodItems.UserID, FoodItems.ItemName, FoodItems.Category,
-                    FoodItems.PickupCity, FoodItems.PickupLocation, FoodItems.ExpiryDate, FoodItems.Quantity,
-                    Users.UserName, DateDiff('d', Date(), FoodItems.ExpiryDate) AS DaysLeft
-                    FROM FoodItems INNER JOIN Users ON FoodItems.UserID = Users.id
-                    WHERE FoodItems.ExpiryDate >= Date()
-                    ORDER BY FoodItems.ExpiryDate ASC";
-            parameters = new OleDbParameter[0];
+            DateTime expiry = Convert.ToDateTime(row["expiry_date"]);
+            int daysLeft = (expiry.Date - DateTime.Today).Days;
+
+            string userName = "";
+            object profilesObj;
+            row.TryGetValue("profiles", out profilesObj);
+            Dictionary<string, object> profile = profilesObj as Dictionary<string, object>;
+            if (profile != null && profile.ContainsKey("username"))
+                userName = profile["username"].ToString();
+
+            table.Rows.Add(
+                row["id"].ToString(),
+                row["user_id"].ToString(),
+                row["item_name"].ToString(),
+                row["category"].ToString(),
+                row["pickup_city"].ToString(),
+                row["pickup_location"].ToString(),
+                expiry,
+                daysLeft,
+                row["quantity"].ToString(),
+                userName);
         }
 
-        DataTable dt = MyAdoHelperAccess.ExecuteDataTable(sql, parameters);
-        gvItems.DataSource = dt;
+        gvItems.DataSource = table;
         gvItems.DataBind();
     }
 
@@ -139,7 +151,7 @@ public partial class FoodBoard : System.Web.UI.Page
             return false;
         if (UserAuth.IsAdmin(Session))
             return true;
-        return Session["UserID"].ToString() == itemUserId.ToString();
+        return UserAuth.UserId(Session) == itemUserId.ToString();
     }
 
     protected void gvItems_RowCommand(object sender, GridViewCommandEventArgs e)
@@ -153,11 +165,9 @@ public partial class FoodBoard : System.Web.UI.Page
             return;
         }
 
-        int itemId = Convert.ToInt32(e.CommandArgument);
-        MyAdoHelperAccess.ExecuteNonQuery(
-            "DELETE FROM FoodItems WHERE ItemID = ?",
-            new OleDbParameter("ItemID", OleDbType.Integer) { Value = itemId });
+        string itemId = e.CommandArgument.ToString();
+        SupabaseRest.Delete("food_items", "id=eq." + itemId, UserAuth.AccessToken(Session));
         lblMessage.Text = "המוצר נמחק.";
-        LoadItems(BuildSearchSql());
+        LoadItems(BuildSearchQuery());
     }
 }

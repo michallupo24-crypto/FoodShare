@@ -1,6 +1,6 @@
 using System;
+using System.Collections.Generic;
 using System.Data;
-using System.Data.OleDb;
 using System.Web.UI;
 
 public partial class SearchUser : System.Web.UI.Page
@@ -12,59 +12,65 @@ public partial class SearchUser : System.Web.UI.Page
 
         if (!IsPostBack)
         {
-            LoadUsers(null, null);
+            LoadUsers(null);
             UpdateStatistics();
         }
     }
 
-    private void LoadUsers(string sql, OleDbParameter[] parameters)
+    // ה-GridView נשאר בלי שינוי - בונים DataTable מקומית באותם שמות עמודות שהיו מול ה-Access
+    private void LoadUsers(string extraQuery)
     {
-        if (string.IsNullOrEmpty(sql))
+        string query = "select=id,username,first_name,last_name,city,login_count&order=username";
+        if (!string.IsNullOrEmpty(extraQuery))
+            query += "&" + extraQuery;
+
+        List<Dictionary<string, object>> rows = SupabaseRest.Select("profiles", query, UserAuth.AccessToken(Session));
+
+        DataTable table = new DataTable();
+        table.Columns.Add("id", typeof(string));
+        table.Columns.Add("UserName", typeof(string));
+        table.Columns.Add("FirstName", typeof(string));
+        table.Columns.Add("LastName", typeof(string));
+        table.Columns.Add("City", typeof(string));
+        table.Columns.Add("loginCount", typeof(int));
+
+        foreach (Dictionary<string, object> row in rows)
         {
-            sql = "SELECT id, UserName, FirstName, LastName, City, Email, loginCount FROM Users ORDER BY UserName";
-            parameters = new OleDbParameter[0];
+            table.Rows.Add(
+                row["id"].ToString(),
+                row["username"].ToString(),
+                row["first_name"].ToString(),
+                row["last_name"].ToString(),
+                row["city"] != null ? row["city"].ToString() : "",
+                Convert.ToInt32(row["login_count"]));
         }
 
-        DataTable dt = MyAdoHelperAccess.ExecuteDataTable(sql, parameters);
-        gvResults.DataSource = dt;
+        gvResults.DataSource = table;
         gvResults.DataBind();
     }
 
     private void UpdateStatistics()
     {
-        DataTable dtMichal = MyAdoHelperAccess.ExecuteDataTable(
-            "SELECT COUNT(*) FROM Users WHERE FirstName = ?",
-            new OleDbParameter("FirstName", OleDbType.VarWChar) { Value = "מיכל" });
-        int countMichal = Convert.ToInt32(dtMichal.Rows[0][0]);
+        List<Dictionary<string, object>> michal = SupabaseRest.Select(
+            "profiles", "select=id&first_name=eq." + Uri.EscapeDataString("מיכל"), UserAuth.AccessToken(Session));
 
-        DataTable dtTelAviv = MyAdoHelperAccess.ExecuteDataTable(
-            "SELECT COUNT(*) FROM Users WHERE City = ?",
-            new OleDbParameter("City", OleDbType.VarWChar) { Value = "Tel Aviv" });
-        int countTelAviv = Convert.ToInt32(dtTelAviv.Rows[0][0]);
+        List<Dictionary<string, object>> telAviv = SupabaseRest.Select(
+            "profiles", "select=id&city=eq.Tel Aviv", UserAuth.AccessToken(Session));
 
-        specificquestions.Text = "מספר המשתמשות בשם מיכל: " + countMichal + " | מספר המשתמשים בתל אביב: " + countTelAviv;
+        specificquestions.Text = "מספר המשתמשות בשם מיכל: " + michal.Count + " | מספר המשתמשים בתל אביב: " + telAviv.Count;
     }
 
     protected void btnSearch_Click(object sender, EventArgs e)
     {
-        string sql = "SELECT id, UserName, FirstName, LastName, City, Email, loginCount FROM Users WHERE 1=1";
-        var parameters = new System.Collections.Generic.List<OleDbParameter>();
+        string query = "";
 
         if (!string.IsNullOrEmpty(txtSearchName.Text.Trim()))
-        {
-            sql += " AND UserName LIKE ?";
-            parameters.Add(new OleDbParameter("UserName", OleDbType.VarWChar) { Value = "%" + txtSearchName.Text.Trim() + "%" });
-        }
+            query += "username=ilike.*" + Uri.EscapeDataString(txtSearchName.Text.Trim()) + "*";
 
         if (ddlCity.SelectedValue != "")
-        {
-            sql += " AND City = ?";
-            parameters.Add(new OleDbParameter("City", OleDbType.VarWChar) { Value = ddlCity.SelectedValue });
-        }
+            query += (query != "" ? "&" : "") + "city=eq." + Uri.EscapeDataString(ddlCity.SelectedValue);
 
-        sql += " ORDER BY UserName";
-
-        LoadUsers(sql, parameters.ToArray());
+        LoadUsers(query);
         UpdateStatistics();
         lblMessage.Text = "תוצאות חיפוש:";
     }
@@ -74,7 +80,7 @@ public partial class SearchUser : System.Web.UI.Page
         txtSearchName.Text = "";
         ddlCity.SelectedIndex = 0;
         lblMessage.Text = "";
-        LoadUsers(null, null);
+        LoadUsers(null);
         UpdateStatistics();
     }
 }

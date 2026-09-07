@@ -1,5 +1,5 @@
-﻿using System;
-using System.Data.OleDb;
+using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Text;
 using System.Web.UI;
@@ -33,30 +33,24 @@ public partial class AddItem : System.Web.UI.Page
 
     protected void btnAdd_Click(object sender, EventArgs e)
     {
-        if (Session["UserID"] == null)
+        if (!UserAuth.IsLoggedIn(Session))
         {
             lblMessage.Text = "יש להתחבר לפני הוספת מוצר.";
             return;
         }
 
-        string sql = @"INSERT INTO FoodItems (UserID, ItemName, ExpiryDate, Quantity, Category, PickupCity, PickupLocation, PostDate)
-                       VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
-
-        using (OleDbConnection conn = new OleDbConnection(MyAdoHelperAccess.GetConnectionString()))
+        var item = new Dictionary<string, object>
         {
-            conn.Open();
-            OleDbCommand cmd = new OleDbCommand(sql, conn);
-            cmd.Parameters.Add(new OleDbParameter("UserID", OleDbType.Integer) { Value = Convert.ToInt32(Session["UserID"]) });
-            cmd.Parameters.Add(new OleDbParameter("ItemName", OleDbType.VarWChar) { Value = txtItemName.Text.Trim() });
-            cmd.Parameters.Add(new OleDbParameter("ExpiryDate", OleDbType.Date) { Value = DateTime.Parse(txtExpiry.Text) });
-            cmd.Parameters.Add(new OleDbParameter("Quantity", OleDbType.Integer) { Value = Convert.ToInt32(txtQuantity.Text) });
-            cmd.Parameters.Add(new OleDbParameter("Category", OleDbType.VarWChar) { Value = ddlCategory.SelectedValue });
-            cmd.Parameters.Add(new OleDbParameter("PickupCity", OleDbType.VarWChar) { Value = ddlCity.SelectedValue });
-            cmd.Parameters.Add(new OleDbParameter("PickupLocation", OleDbType.VarWChar) { Value = txtLocation.Text.Trim() });
-            cmd.Parameters.Add(new OleDbParameter("PostDate", OleDbType.Date) { Value = DateTime.Now });
+            { "user_id", UserAuth.UserId(Session) },
+            { "item_name", txtItemName.Text.Trim() },
+            { "expiry_date", DateTime.Parse(txtExpiry.Text).ToString("yyyy-MM-dd") },
+            { "quantity", Convert.ToInt32(txtQuantity.Text) },
+            { "category", ddlCategory.SelectedValue },
+            { "pickup_city", ddlCity.SelectedValue },
+            { "pickup_location", txtLocation.Text.Trim() }
+        };
 
-            cmd.ExecuteNonQuery();
-        }
+        SupabaseRest.Insert("food_items", item, UserAuth.AccessToken(Session));
 
         lblMessage.ForeColor = System.Drawing.Color.Green;
         lblMessage.Text = "המוצר פורסם בהצלחה!";

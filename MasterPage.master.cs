@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Data;
 using System.Web.UI;
 
 public partial class MasterPage : System.Web.UI.MasterPage
@@ -43,20 +42,6 @@ public partial class MasterPage : System.Web.UI.MasterPage
 
     private int GetLoginCount()
     {
-        if (Session["loginCount"] != null)
-            return Convert.ToInt32(Session["loginCount"]);
-
-        if (Session["UserID"] == null)
-            return 0;
-
-        string sql = "SELECT loginCount FROM Users WHERE id = " + Session["UserID"].ToString();
-        DataTable dt = MyAdoHelperAccess.ExecuteDataTable(sql);
-        if (dt.Rows.Count > 0 && dt.Rows[0]["loginCount"] != DBNull.Value)
-        {
-            int count = Convert.ToInt32(dt.Rows[0]["loginCount"]);
-            Session["loginCount"] = count;
-            return count;
-        }
-        return 0;
+        return Session["loginCount"] != null ? Convert.ToInt32(Session["loginCount"]) : 0;
     }
 }

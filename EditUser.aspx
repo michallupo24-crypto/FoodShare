@@ -11,10 +11,6 @@
         <asp:TextBox ID="txtLastName" runat="server"></asp:TextBox><br />
         <label>שם משתמש:</label><br />
         <asp:TextBox ID="txtUserName" runat="server"></asp:TextBox><br />
-        <label>אימייל:</label><br />
-        <asp:TextBox ID="txtEmail" runat="server"></asp:TextBox><br />
-        <label>סיסמה (השאירו ריק כדי לא לשנות):</label><br />
-        <asp:TextBox ID="txtPassword" runat="server" TextMode="Password"></asp:TextBox><br />
         <label>קידומת:</label><br />
         <asp:TextBox ID="txtPhonePrefix" runat="server"></asp:TextBox><br />
         <label>טלפון:</label><br />
@@ -28,6 +24,7 @@
         <label>מספר כניסות:</label><br />
         <asp:TextBox ID="txtLoginCount" runat="server"></asp:TextBox><br />
         <asp:CheckBox ID="chkIsAdmin" runat="server" Text="מנהל אתר" /><br /><br />
+        <p><em>לאיפוס סיסמה או שינוי אימייל של משתמש/ת - יש לעשות זאת מה-Dashboard של Supabase (Authentication → Users).</em></p>
 
         <asp:Button ID="btnSave" runat="server" Text="שמור" OnClick="btnSave_Click" />
         <asp:Button ID="btnBack" runat="server" Text="חזרה" PostBackUrl="AdminPanel.aspx" CausesValidation="false" />

@@ -1,5 +1,6 @@
 using System;
 using System.Data;
+using System.Data.OleDb;
 using System.Web.UI;
 
 public partial class SearchUser : System.Web.UI.Page
@@ -11,31 +12,34 @@ public partial class SearchUser : System.Web.UI.Page
 
         if (!IsPostBack)
         {
-            LoadUsers(null);
+            LoadUsers(null, null);
             UpdateStatistics();
         }
     }
 
-    private void LoadUsers(string sql)
+    private void LoadUsers(string sql, OleDbParameter[] parameters)
     {
         if (string.IsNullOrEmpty(sql))
         {
             sql = "SELECT id, UserName, FirstName, LastName, City, Email, loginCount FROM Users ORDER BY UserName";
+            parameters = new OleDbParameter[0];
         }
 
-        DataTable dt = MyAdoHelperAccess.ExecuteDataTable(sql);
+        DataTable dt = MyAdoHelperAccess.ExecuteDataTable(sql, parameters);
         gvResults.DataSource = dt;
         gvResults.DataBind();
     }
 
     private void UpdateStatistics()
     {
-        string sqlMichal = "SELECT COUNT(*) FROM Users WHERE FirstName = 'מיכל'";
-        DataTable dtMichal = MyAdoHelperAccess.ExecuteDataTable(sqlMichal);
+        DataTable dtMichal = MyAdoHelperAccess.ExecuteDataTable(
+            "SELECT COUNT(*) FROM Users WHERE FirstName = ?",
+            new OleDbParameter("FirstName", OleDbType.VarWChar) { Value = "מיכל" });
         int countMichal = Convert.ToInt32(dtMichal.Rows[0][0]);
 
-        string sqlTelAviv = "SELECT COUNT(*) FROM Users WHERE City = 'Tel Aviv'";
-        DataTable dtTelAviv = MyAdoHelperAccess.ExecuteDataTable(sqlTelAviv);
+        DataTable dtTelAviv = MyAdoHelperAccess.ExecuteDataTable(
+            "SELECT COUNT(*) FROM Users WHERE City = ?",
+            new OleDbParameter("City", OleDbType.VarWChar) { Value = "Tel Aviv" });
         int countTelAviv = Convert.ToInt32(dtTelAviv.Rows[0][0]);
 
         specificquestions.Text = "מספר המשתמשות בשם מיכל: " + countMichal + " | מספר המשתמשים בתל אביב: " + countTelAviv;
@@ -44,16 +48,23 @@ public partial class SearchUser : System.Web.UI.Page
     protected void btnSearch_Click(object sender, EventArgs e)
     {
         string sql = "SELECT id, UserName, FirstName, LastName, City, Email, loginCount FROM Users WHERE 1=1";
+        var parameters = new System.Collections.Generic.List<OleDbParameter>();
 
         if (!string.IsNullOrEmpty(txtSearchName.Text.Trim()))
-            sql += " AND UserName LIKE '%" + txtSearchName.Text.Trim().Replace("'", "''") + "%'";
+        {
+            sql += " AND UserName LIKE ?";
+            parameters.Add(new OleDbParameter("UserName", OleDbType.VarWChar) { Value = "%" + txtSearchName.Text.Trim() + "%" });
+        }
 
         if (ddlCity.SelectedValue != "")
-            sql += " AND City = '" + ddlCity.SelectedValue.Replace("'", "''") + "'";
+        {
+            sql += " AND City = ?";
+            parameters.Add(new OleDbParameter("City", OleDbType.VarWChar) { Value = ddlCity.SelectedValue });
+        }
 
         sql += " ORDER BY UserName";
 
-        LoadUsers(sql);
+        LoadUsers(sql, parameters.ToArray());
         UpdateStatistics();
         lblMessage.Text = "תוצאות חיפוש:";
     }
@@ -63,7 +74,7 @@ public partial class SearchUser : System.Web.UI.Page
         txtSearchName.Text = "";
         ddlCity.SelectedIndex = 0;
         lblMessage.Text = "";
-        LoadUsers(null);
+        LoadUsers(null, null);
         UpdateStatistics();
     }
 }

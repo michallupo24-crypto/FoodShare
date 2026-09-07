@@ -3,7 +3,6 @@
 <asp:Content ID="Content1" ContentPlaceHolderID="ContentPlaceHolder1" Runat="Server">
     <div class="form-container">
         <h2>כניסה למערכת</h2>
-        <p>מנהל: admin / admin123 | לקוח: אחרי הרשמה</p>
 
         <label>שם משתמש:</label><br />
         <input type="text" name="UserName" required /><br />
@@ -13,6 +12,6 @@
 
         <input type="submit" name="mySubmit" value="כניסה" />
         <br /><br />
-        <a href="regestaration.aspx">עדיין לא רשומה? לחצי כאן להרשמה</a>
+        <a href="regestaration.aspx">עדיין לא רשומים? לחצו כאן להרשמה</a>
     </div>
 </asp:Content>

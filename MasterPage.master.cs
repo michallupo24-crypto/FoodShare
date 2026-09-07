@@ -30,14 +30,14 @@ public partial class MasterPage : System.Web.UI.MasterPage
         if (loggedIn)
         {
             string name = Session["userName"] != null ? Session["userName"].ToString() : "";
-            string role = isAdmin ? "מנהל" : "לקוח";
+            string role = isAdmin ? "מנהל/ת" : "משתמש/ת";
             int loginCount = GetLoginCount();
 
             lblUserStatus.Text = "שלום, " + name + " (" + role + ") | מספר כניסות: " + loginCount;
         }
         else
         {
-            lblUserStatus.Text = "אורח – התחברי או הירשמי כדי להוסיף מוצרים";
+            lblUserStatus.Text = "אורח/ת – התחברו או הירשמו כדי להוסיף מוצרים";
         }
     }
 

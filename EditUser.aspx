@@ -13,8 +13,8 @@
         <asp:TextBox ID="txtUserName" runat="server"></asp:TextBox><br />
         <label>אימייל:</label><br />
         <asp:TextBox ID="txtEmail" runat="server"></asp:TextBox><br />
-        <label>סיסמה:</label><br />
-        <asp:TextBox ID="txtPassword" runat="server"></asp:TextBox><br />
+        <label>סיסמה (השאירו ריק כדי לא לשנות):</label><br />
+        <asp:TextBox ID="txtPassword" runat="server" TextMode="Password"></asp:TextBox><br />
         <label>קידומת:</label><br />
         <asp:TextBox ID="txtPhonePrefix" runat="server"></asp:TextBox><br />
         <label>טלפון:</label><br />

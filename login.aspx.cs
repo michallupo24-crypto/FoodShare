@@ -1,5 +1,6 @@
 using System;
 using System.Data;
+using System.Data.OleDb;
 using System.Web.UI;
 
 public partial class login : System.Web.UI.Page
@@ -11,7 +12,7 @@ public partial class login : System.Web.UI.Page
 
         if (loggedAdmin || loggedUser)
         {
-            Session["message"] = "אינך יכולה להתחבר כשאת כבר מחוברת. התנתקי כדי להתחבר לחשבון אחר.";
+            Session["message"] = "לא ניתן להתחבר כשאתם כבר מחוברים. התנתקו כדי להתחבר לחשבון אחר.";
             Response.Redirect("Message.aspx");
             return;
         }
@@ -22,16 +23,32 @@ public partial class login : System.Web.UI.Page
         string userName = Request.Form["UserName"];
         string password = Request.Form["Password"];
 
-        string sqlSelectQuery = string.Format(
-            "SELECT UserName, isAdmin, id, loginCount FROM Users WHERE (UserName = '{0}' AND Password = '{1}')",
-            userName.Replace("'", "''"),
-            password.Replace("'", "''"));
+        DataTable dt = MyAdoHelperAccess.ExecuteDataTable(
+            "SELECT UserName, isAdmin, id, loginCount, Password FROM Users WHERE UserName = ?",
+            new OleDbParameter("UserName", OleDbType.VarWChar) { Value = userName });
 
-        bool found = MyAdoHelperAccess.IsExist(sqlSelectQuery);
+        bool found = false;
+        if (dt.Rows.Count > 0)
+        {
+            string storedPassword = dt.Rows[0]["Password"].ToString();
+
+            if (PasswordHasher.IsHashed(storedPassword))
+            {
+                found = PasswordHasher.Verify(password, storedPassword);
+            }
+            else if (storedPassword == password)
+            {
+                // חשבון ישן עם סיסמה בטקסט גלוי - מאמתים ומעדכנים בשקט להצפנה
+                found = true;
+                MyAdoHelperAccess.ExecuteNonQuery(
+                    "UPDATE Users SET Password = ? WHERE id = ?",
+                    new OleDbParameter("Password", OleDbType.VarWChar) { Value = PasswordHasher.Hash(password) },
+                    new OleDbParameter("id", OleDbType.Integer) { Value = Convert.ToInt32(dt.Rows[0]["id"]) });
+            }
+        }
 
         if (found)
         {
-            DataTable dt = MyAdoHelperAccess.ExecuteDataTable(sqlSelectQuery);
             bool isAdmin = Convert.ToBoolean(dt.Rows[0]["isAdmin"]);
             int userId = Convert.ToInt32(dt.Rows[0]["id"]);
 
@@ -41,7 +58,9 @@ public partial class login : System.Web.UI.Page
 
             int newCount = oldCount + 1;
             MyAdoHelperAccess.ExecuteNonQuery(
-                string.Format("UPDATE Users SET loginCount = {0} WHERE id = {1}", newCount, userId));
+                "UPDATE Users SET loginCount = ? WHERE id = ?",
+                new OleDbParameter("loginCount", OleDbType.Integer) { Value = newCount },
+                new OleDbParameter("id", OleDbType.Integer) { Value = userId });
 
             Session["userName"] = userName;
             Session["UserID"] = userId.ToString();

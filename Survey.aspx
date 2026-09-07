@@ -2,7 +2,7 @@
 
 <asp:Content ID="Content1" ContentPlaceHolderID="ContentPlaceHolder1" Runat="Server">
     <div class="form-container">
-        <h2>סקר – בונוס (XML)</h2>
+        <h2>סקר משוב</h2>
         <asp:Label ID="lblMessage" runat="server"></asp:Label>
         
         <p>האם האתר עוזר לך לצמצם בזבוז מזון?</p>

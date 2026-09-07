@@ -2,7 +2,7 @@
 
 <asp:Content ID="Content1" ContentPlaceHolderID="ContentPlaceHolder1" Runat="Server">
     <div class="form-container">
-        <h2>עדכון מוצר</h2>
+        <h2>עריכת מוצר</h2>
         <asp:Label ID="lblMessage" runat="server" ForeColor="Red"></asp:Label><br />
 
         <label>שם המוצר:</label><br />

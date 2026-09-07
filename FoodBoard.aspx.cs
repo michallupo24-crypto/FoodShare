@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Data;
 using System.Data.OleDb;
 using System.IO;
@@ -9,29 +9,28 @@ using System.Xml;
 
 public partial class FoodBoard : System.Web.UI.Page
 {
+    private class SearchQuery
+    {
+        public string Sql;
+        public OleDbParameter[] Parameters;
+    }
+
     protected void Page_Load(object sender, EventArgs e)
     {
         if (!IsPostBack)
         {
             LoadCityFilter();
             LoadCategoryFilter();
-            LoadItems(null);
-        }
-        if (!IsPostBack)
-        {
-            LoadCityFilter();
-            LoadCategoryFilter();
 
-            // בדיקה אם הגיע סינון מהלינק
             string catFromUrl = Request.QueryString["cat"];
             if (!string.IsNullOrEmpty(catFromUrl))
             {
                 ddlCategory.SelectedValue = catFromUrl;
-                LoadItems(BuildSearchSql()); // טעינה עם סינון
+                LoadItems(BuildSearchSql());
             }
             else
             {
-                LoadItems(null);
+                LoadItems(null, null);
             }
         }
     }
@@ -75,10 +74,10 @@ public partial class FoodBoard : System.Web.UI.Page
         ddlCategory.SelectedIndex = 0;
         ddlExpiry.SelectedIndex = 0;
         lblMessage.Text = "";
-        LoadItems(null);
+        LoadItems(null, null);
     }
 
-    private string BuildSearchSql()
+    private SearchQuery BuildSearchSql()
     {
         string sql = @"SELECT FoodItems.ItemID, FoodItems.UserID, FoodItems.ItemName, FoodItems.Category,
                        FoodItems.PickupCity, FoodItems.PickupLocation, FoodItems.ExpiryDate, FoodItems.Quantity,
@@ -86,23 +85,37 @@ public partial class FoodBoard : System.Web.UI.Page
                        FROM FoodItems INNER JOIN Users ON FoodItems.UserID = Users.id
                        WHERE FoodItems.ExpiryDate >= Date()";
 
+        var parameters = new System.Collections.Generic.List<OleDbParameter>();
+
         if (ddlCity.SelectedValue != "")
-            sql += " AND FoodItems.PickupCity = '" + ddlCity.SelectedValue.Replace("'", "''") + "'";
+        {
+            sql += " AND FoodItems.PickupCity = ?";
+            parameters.Add(new OleDbParameter("PickupCity", OleDbType.VarWChar) { Value = ddlCity.SelectedValue });
+        }
 
         if (ddlCategory.SelectedValue != "")
-            sql += " AND FoodItems.Category = '" + ddlCategory.SelectedValue.Replace("'", "''") + "'";
+        {
+            sql += " AND FoodItems.Category = ?";
+            parameters.Add(new OleDbParameter("Category", OleDbType.VarWChar) { Value = ddlCategory.SelectedValue });
+        }
 
         if (ddlExpiry.SelectedValue != "")
         {
             int days = Convert.ToInt32(ddlExpiry.SelectedValue);
-            sql += " AND FoodItems.ExpiryDate <= DateAdd('d', " + days + ", Date())";
+            sql += " AND FoodItems.ExpiryDate <= DateAdd('d', ?, Date())";
+            parameters.Add(new OleDbParameter("Days", OleDbType.Integer) { Value = days });
         }
 
         sql += " ORDER BY FoodItems.ExpiryDate ASC";
-        return sql;
+        return new SearchQuery { Sql = sql, Parameters = parameters.ToArray() };
     }
 
-    private void LoadItems(string sql)
+    private void LoadItems(SearchQuery query)
+    {
+        LoadItems(query.Sql, query.Parameters);
+    }
+
+    private void LoadItems(string sql, OleDbParameter[] parameters)
     {
         if (string.IsNullOrEmpty(sql))
         {
@@ -112,9 +125,10 @@ public partial class FoodBoard : System.Web.UI.Page
                     FROM FoodItems INNER JOIN Users ON FoodItems.UserID = Users.id
                     WHERE FoodItems.ExpiryDate >= Date()
                     ORDER BY FoodItems.ExpiryDate ASC";
+            parameters = new OleDbParameter[0];
         }
 
-        DataTable dt = MyAdoHelperAccess.ExecuteDataTable(sql);
+        DataTable dt = MyAdoHelperAccess.ExecuteDataTable(sql, parameters);
         gvItems.DataSource = dt;
         gvItems.DataBind();
     }
@@ -140,7 +154,9 @@ public partial class FoodBoard : System.Web.UI.Page
         }
 
         int itemId = Convert.ToInt32(e.CommandArgument);
-        MyAdoHelperAccess.ExecuteNonQuery("DELETE FROM FoodItems WHERE ItemID = " + itemId);
+        MyAdoHelperAccess.ExecuteNonQuery(
+            "DELETE FROM FoodItems WHERE ItemID = ?",
+            new OleDbParameter("ItemID", OleDbType.Integer) { Value = itemId });
         lblMessage.Text = "המוצר נמחק.";
         LoadItems(BuildSearchSql());
     }

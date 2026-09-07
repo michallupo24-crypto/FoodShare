@@ -2,11 +2,11 @@
 
 <asp:Content ID="Content1" ContentPlaceHolderID="ContentPlaceHolder1" Runat="Server">
     <div style="text-align:center;">
-        <h2>בחרי קטגוריית מזון</h2>
+        <h2>בחרו קטגוריית מזון</h2>
         
        
         <img id="gallery" src="Images/bread.jpg" style="width:300px; height:200px; cursor:pointer;" />
-        <p>לחצי על התמונה כדי לראות את כל המוצרים בקטגוריה הנוכחית</p>
+        <p>לחצו על התמונה כדי לראות את כל המוצרים בקטגוריה הנוכחית</p>
     </div>
 
     <script type="text/javascript">

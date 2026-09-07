@@ -2,7 +2,7 @@
 
 <asp:Content ID="Content1" ContentPlaceHolderID="ContentPlaceHolder1" Runat="Server">
     <div class="form-container">
-        <h2>הרשמת לקוח חדש</h2>
+        <h2>הצטרפות לקהילה</h2>
 
         <label>שם פרטי:</label><br />
         <input type="text" id="FirstName" name="FirstName" /><br />
@@ -21,9 +21,6 @@
 
         <label>שנת לידה:</label><br />
         <input type="number" id="BirthYear" name="BirthYear" /><br />
-
-        <label>תעודת זהות:</label><br />
-        <input type="text" id="idification" name="idification" maxlength="9" /><br />
 
         <label>מגדר:</label><br />
         <input type="radio" name="Gender" value="male" checked /> זכר
@@ -54,14 +51,9 @@
 
     <script type="text/javascript">
         function checkForm() {
-            var id = document.getElementById("idification").value;
             var name = document.getElementById("FirstName").value;
             var year = document.getElementById("BirthYear").value;
 
-            if (id.length !== 9 || isNaN(id)) {
-                alert("תעודת זהות חייבת להכיל 9 ספרות!");
-                return false;
-            }
             if (!/^[A-Za-z\u0590-\u05FF]+$/.test(name)) {
                 alert("שם פרטי חייב להכיל אותיות בלבד!");
                 return false;

@@ -2,7 +2,7 @@
 
 <asp:Content ID="Content1" ContentPlaceHolderID="ContentPlaceHolder1" Runat="Server">
     <div style="text-align:center; padding: 20px;">
-        <h1 id="mainTitle">פרויקט שיתוף מוצרים</h1>
+        <h1 id="mainTitle">פרויקט שיתוף מזון</h1>
        
         <img id="logoImg" src="Images/school_logo.png" alt="סמל בית ספר" 
              style="width:150px; transition: 0.5s;" />

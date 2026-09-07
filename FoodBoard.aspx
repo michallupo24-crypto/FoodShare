@@ -41,6 +41,8 @@
                 <ItemTemplate>
                     <asp:HyperLink ID="lnkEdit" runat="server" NavigateUrl='<%# "EditItem.aspx?id=" + Eval("ItemID") %>'
                         Text="עריכה" Visible='<%# CanEdit(Eval("UserID")) %>' />
+                    <asp:HyperLink ID="lnkMessage" runat="server" NavigateUrl='<%# "Chat.aspx?with=" + Eval("UserID") + "&item=" + Eval("ItemID") %>'
+                        Text="שלח הודעה" Visible='<%# CanMessage(Eval("UserID")) %>' />
                     <asp:Button ID="btnDelete" runat="server" Text="מחיקה" CommandName="DeleteItem"
                         CommandArgument='<%# Eval("ItemID") %>'
                         Visible='<%# CanEdit(Eval("UserID")) %>'

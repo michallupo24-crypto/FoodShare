@@ -41,6 +41,12 @@ public static class SupabaseRest
 
     public static void Rpc(string functionName, object args, string userAccessToken)
     {
+        RpcSelect(functionName, args, userAccessToken);
+    }
+
+    // for RPC functions that return a table/rows (e.g. "returns table (...)")
+    public static List<Dictionary<string, object>> RpcSelect(string functionName, object args, string userAccessToken)
+    {
         string url = SupabaseConfig.Url + "/rest/v1/rpc/" + functionName;
         using (var request = new HttpRequestMessage(HttpMethod.Post, url))
         {
@@ -48,7 +54,29 @@ public static class SupabaseRest
             string json = new JavaScriptSerializer().Serialize(args ?? new Dictionary<string, object>());
             request.Content = new StringContent(json, Encoding.UTF8, "application/json");
             HttpResponseMessage response = Http.SendAsync(request).GetAwaiter().GetResult();
+            string body = response.Content.ReadAsStringAsync().GetAwaiter().GetResult();
             response.EnsureSuccessStatusCode();
+            if (string.IsNullOrEmpty(body))
+                return new List<Dictionary<string, object>>();
+            return new JavaScriptSerializer().Deserialize<List<Dictionary<string, object>>>(body);
+        }
+    }
+
+    // for RPC functions that return a single scalar (e.g. "returns bigint"/"returns int")
+    public static long RpcScalar(string functionName, object args, string userAccessToken)
+    {
+        string url = SupabaseConfig.Url + "/rest/v1/rpc/" + functionName;
+        using (var request = new HttpRequestMessage(HttpMethod.Post, url))
+        {
+            AddAuthHeaders(request, userAccessToken);
+            string json = new JavaScriptSerializer().Serialize(args ?? new Dictionary<string, object>());
+            request.Content = new StringContent(json, Encoding.UTF8, "application/json");
+            HttpResponseMessage response = Http.SendAsync(request).GetAwaiter().GetResult();
+            string body = response.Content.ReadAsStringAsync().GetAwaiter().GetResult();
+            response.EnsureSuccessStatusCode();
+            if (string.IsNullOrEmpty(body))
+                return 0;
+            return long.Parse(body);
         }
     }
 

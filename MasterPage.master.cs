@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Web.UI;
 
 public partial class MasterPage : System.Web.UI.MasterPage
@@ -19,9 +19,11 @@ public partial class MasterPage : System.Web.UI.MasterPage
         lnkAddItem.Visible = loggedIn;
         lnkSurvey.Visible = loggedIn;
         lnkLogout.Visible = loggedIn;
+        lnkMessages.Visible = loggedIn;
         litS6.Visible = loggedIn;
         litS7.Visible = loggedIn;
         litS8.Visible = loggedIn;
+        litS10.Visible = loggedIn;
 
         lnkAdmin.Visible = isAdmin;
         litS9.Visible = isAdmin;
@@ -33,6 +35,22 @@ public partial class MasterPage : System.Web.UI.MasterPage
             int loginCount = GetLoginCount();
 
             lblUserStatus.Text = "שלום, " + name + " (" + role + ") | מספר כניסות: " + loginCount;
+
+            // עטוף ב-try כדי שדף עם תקלה זמנית מול Supabase (או לפני שהרצת את 002_messages.sql)
+            // לא יפיל את כל האתר - רק את הבאדג' עצמו
+            try
+            {
+                int unread = GetUnreadCount();
+                if (unread > 0)
+                {
+                    lblUnreadBadge.Text = unread.ToString();
+                    lblUnreadBadge.Visible = true;
+                }
+            }
+            catch (Exception)
+            {
+                lblUnreadBadge.Visible = false;
+            }
         }
         else
         {
@@ -43,5 +61,10 @@ public partial class MasterPage : System.Web.UI.MasterPage
     private int GetLoginCount()
     {
         return Session["loginCount"] != null ? Convert.ToInt32(Session["loginCount"]) : 0;
+    }
+
+    private int GetUnreadCount()
+    {
+        return (int)SupabaseRest.RpcScalar("unread_message_count", null, UserAuth.AccessToken(Session));
     }
 }

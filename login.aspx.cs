@@ -46,6 +46,7 @@ public partial class login : System.Web.UI.Page
 
         Session["SupabaseUserId"] = result.UserId;
         Session["SupabaseAccessToken"] = result.AccessToken;
+        Session["SupabaseRefreshToken"] = result.RefreshToken;
         Session["userName"] = profile["username"].ToString();
         Session["isAdmin"] = Convert.ToBoolean(profile["is_admin"]);
         Session["loginCount"] = newCount;

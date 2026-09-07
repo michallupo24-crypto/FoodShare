@@ -35,6 +35,16 @@ nav {
         margin: 0 10px;
     }
 
+.nav-badge {
+    background: #e74c3c;
+    color: white;
+    border-radius: 10px;
+    padding: 1px 7px;
+    font-size: 0.75em;
+    margin-inline-start: -6px;
+    vertical-align: top;
+}
+
         nav a:hover {
             color: #f1c40f;
         }
@@ -111,4 +121,131 @@ ul {
 .grid-table th {
     background-color: #27ae60;
     color: white;
+}
+
+/* --- Messages / Chat --- */
+
+.conversation-list {
+    max-width: 600px;
+    margin: 20px auto;
+}
+
+.conversation-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 14px 16px;
+    margin-bottom: 8px;
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+    text-decoration: none;
+    color: #333;
+}
+
+    .conversation-row:hover {
+        background: #f0f8f3;
+    }
+
+    .conversation-row.unread {
+        border-right: 4px solid #27ae60;
+        font-weight: bold;
+    }
+
+.conversation-name {
+    font-weight: bold;
+    color: #27ae60;
+    white-space: nowrap;
+}
+
+.conversation-preview {
+    flex: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    color: #666;
+}
+
+.conversation-badge {
+    background: #27ae60;
+    color: white;
+    border-radius: 12px;
+    padding: 2px 9px;
+    font-size: 0.8em;
+}
+
+.chat-container {
+    max-width: 600px;
+    margin: 20px auto;
+}
+
+.chat-item-context {
+    color: #666;
+    font-style: italic;
+    margin-top: -10px;
+}
+
+.chat-history {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    height: 420px;
+    overflow-y: auto;
+    padding: 16px;
+    background: #e8ede9;
+    border-radius: 8px;
+}
+
+.chat-bubble {
+    max-width: 75%;
+    padding: 8px 14px;
+    border-radius: 16px;
+    line-height: 1.4;
+    word-wrap: break-word;
+}
+
+    .chat-bubble.mine {
+        align-self: flex-end;
+        background: #27ae60;
+        color: white;
+        border-bottom-left-radius: 4px;
+    }
+
+    .chat-bubble.theirs {
+        align-self: flex-start;
+        background: white;
+        color: #333;
+        border-bottom-right-radius: 4px;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    }
+
+.chat-input-row {
+    display: flex;
+    gap: 8px;
+    margin-top: 10px;
+}
+
+    .chat-input-row input {
+        flex: 1;
+        padding: 10px;
+        border: 1px solid #ccc;
+        border-radius: 20px;
+    }
+
+    .chat-input-row button {
+        background: #27ae60;
+        color: white;
+        border: none;
+        border-radius: 20px;
+        padding: 10px 20px;
+        cursor: pointer;
+    }
+
+        .chat-input-row button:hover {
+            background: #219150;
+        }
+
+.chat-error {
+    color: #c0392b;
+    min-height: 1.2em;
 }

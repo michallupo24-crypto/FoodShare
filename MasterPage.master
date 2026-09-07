@@ -33,6 +33,9 @@
                         <asp:HyperLink ID="lnkAddItem" runat="server" NavigateUrl="AddItem.aspx" Text="הוספת מוצר" Visible="false" />
                         <asp:Literal ID="litS7" runat="server" Text=" | " Visible="false" />
                         <asp:HyperLink ID="lnkSurvey" runat="server" NavigateUrl="Survey.aspx" Text="סקר" Visible="false" />
+                        <asp:Literal ID="litS10" runat="server" Text=" | " Visible="false" />
+                        <asp:HyperLink ID="lnkMessages" runat="server" NavigateUrl="Messages.aspx" Text="הודעות" Visible="false" />
+                        <asp:Label ID="lblUnreadBadge" runat="server" CssClass="nav-badge" Visible="false" />
                         <asp:Literal ID="litS8" runat="server" Text=" | " Visible="false" />
                         <asp:HyperLink ID="lnkAdmin" runat="server" NavigateUrl="AdminPanel.aspx" Text="ניהול מנהל" Visible="false" />
                         <asp:Literal ID="litS9" runat="server" Text=" | " Visible="false" />

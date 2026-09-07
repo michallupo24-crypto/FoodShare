@@ -154,6 +154,13 @@ public partial class FoodBoard : System.Web.UI.Page
         return UserAuth.UserId(Session) == itemUserId.ToString();
     }
 
+    public bool CanMessage(object itemUserId)
+    {
+        if (!UserAuth.IsLoggedIn(Session))
+            return false;
+        return UserAuth.UserId(Session) != itemUserId.ToString();
+    }
+
     protected void gvItems_RowCommand(object sender, GridViewCommandEventArgs e)
     {
         if (e.CommandName != "DeleteItem")

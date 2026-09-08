@@ -16,9 +16,10 @@
 
 name: Deploy over FTP
 
+# מושבת זמנית על push - ה-FTP עדיין לא עובד (530 קבוע, כנראה קשור לנעילת
+# כתובת זמנית של האירוח). אפשר להריץ ידנית מטאב Actions ("Run workflow")
+# ברגע שזה נפתר. עד אז הפריסה נעשית ידנית דרך ה-Files בפאנל.
 on:
-  push:
-    branches: [ master ]
   workflow_dispatch:
 
 jobs:

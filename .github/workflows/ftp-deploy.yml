@@ -1,0 +1,40 @@
+# פריסה אוטומטית לאירוח ASP.NET רגיל (למשל SmarterASP.NET) דרך FTP,
+# בכל push ל-master.
+#
+# הגדרה חד-פעמית נדרשת:
+#   1. להירשם לאירוח (למשל smarterasp.net) ולפתוח שם אתר/תוכנית - חינמית להתחלה.
+#      בפאנל הניהול שלהם יהיו פרטי FTP: כתובת שרת, שם משתמש, סיסמה.
+#   2. ב-GitHub: Settings -> Secrets and variables -> Actions -> New repository secret,
+#      ולהוסיף שלושה סודות:
+#        FTP_SERVER    - כתובת שרת ה-FTP (למשל ftp.smarterasp.net)
+#        FTP_USERNAME  - שם המשתמש שקיבלת
+#        FTP_PASSWORD  - הסיסמה שקיבלת
+#   3. push ל-master - הפריסה תרוץ אוטומטית (אפשר גם להריץ ידנית מטאב Actions).
+#
+# זהו פרויקט Website ישן (בלי csproj/.sln) - אין שלב קומפילציה בכלל, ה-.aspx
+# מתקמפלים אוטומטית ע"י IIS בבקשה הראשונה, בדיוק כמו בהרצה המקומית.
+
+name: Deploy over FTP
+
+on:
+  push:
+    branches: [ master ]
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Deploy over FTP
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
+        with:
+          server: ${{ secrets.FTP_SERVER }}
+          username: ${{ secrets.FTP_USERNAME }}
+          password: ${{ secrets.FTP_PASSWORD }}
+          exclude: |
+            .git*
+            .git*/**
+            .github/**
+            supabase/**

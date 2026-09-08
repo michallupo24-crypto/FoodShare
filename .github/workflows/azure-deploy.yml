@@ -1,0 +1,35 @@
+# פריסה אוטומטית ל-Azure App Service בכל push ל-master.
+#
+# הגדרה חד-פעמית נדרשת (בפורטל Azure + בהגדרות ה-repo ב-GitHub):
+#   1. ליצור Azure App Service (Windows, Stack: .NET Framework, גרסה v4.8).
+#   2. להחליף למטה את "YOUR-APP-NAME-HERE" בשם ה-App Service שיצרת.
+#   3. בפורטל Azure -> App Service -> Get publish profile (מוריד קובץ XML).
+#   4. ב-GitHub: Settings -> Secrets and variables -> Actions -> New repository secret
+#      בשם AZURE_WEBAPP_PUBLISH_PROFILE, ולהדביק בתוכו את כל תוכן הקובץ שהורדת.
+#   5. push ל-master - הפריסה תרוץ אוטומטית (אפשר גם להריץ ידנית מטאב Actions).
+#
+# זהו פרויקט Website ישן (בלי csproj/.sln) - אין שלב קומפילציה בכלל, ה-.aspx
+# מתקמפלים אוטומטית ע"י IIS/Azure בבקשה הראשונה, בדיוק כמו בהרצה המקומית.
+
+name: Deploy to Azure App Service
+
+on:
+  push:
+    branches: [ master ]
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Remove files not needed at runtime (migrations, workflow, git metadata)
+        run: rm -rf .git .github supabase
+
+      - name: Deploy to Azure Web App
+        uses: azure/webapps-deploy@v3
+        with:
+          app-name: YOUR-APP-NAME-HERE
+          publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}
+          package: .
